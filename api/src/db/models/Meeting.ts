@@ -21,9 +21,9 @@ export class Meeting extends Model<MeetingAttributes> implements MeetingAttribut
   public created_at!: Date;
   public updated_at!: Date;
 
-  // Association methods will be added by Sequelize
   public readonly client?: any;
   public readonly seller?: any;
+  public readonly classifications?: any;
 
   static associate(models: any) {
     Meeting.belongsTo(models.Client, {
@@ -34,6 +34,11 @@ export class Meeting extends Model<MeetingAttributes> implements MeetingAttribut
     Meeting.belongsTo(models.Seller, {
       foreignKey: 'seller_id',
       as: 'seller'
+    });
+
+    Meeting.hasMany(models.MeetingClassification, {
+      foreignKey: 'meeting_id',
+      as: 'classifications'
     });
   }
 }

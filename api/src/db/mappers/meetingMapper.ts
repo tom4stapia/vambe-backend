@@ -1,13 +1,6 @@
 import { MeetingData, ClientCSVRow } from '../types';
 
 export class MeetingMapper {
-  /**
-   * Transform CSV row to meeting database format
-   * @param csvRow - Raw CSV row data
-   * @param clientId - Client ID from database
-   * @param sellerId - Seller ID from database
-   * @returns Meeting data for database insertion
-   */
   static mapFromCSV(csvRow: ClientCSVRow, clientId: number, sellerId: number): MeetingData {
     return {
       client_id: clientId,
@@ -20,11 +13,6 @@ export class MeetingMapper {
     };
   }
 
-  /**
-   * Parse meeting date from CSV
-   * @param dateString - Date string from CSV
-   * @returns Parsed date
-   */
   static parseMeetingDate(dateString: string | null): Date {
     if (!dateString || typeof dateString !== 'string') {
       throw new Error('Meeting date is required');
@@ -39,11 +27,6 @@ export class MeetingMapper {
     return date;
   }
 
-  /**
-   * Parse closed status from CSV
-   * @param closedValue - Closed value from CSV
-   * @returns Boolean closed status
-   */
   static parseClosed(closedValue: string | null): boolean {
     if (closedValue === null || closedValue === undefined) {
       return false;
@@ -57,11 +40,6 @@ export class MeetingMapper {
            stringValue === 'closed';
   }
 
-  /**
-   * Sanitize transcript text
-   * @param transcript - Raw transcript from CSV
-   * @returns Sanitized transcript
-   */
   static sanitizeTranscript(transcript: string | null): string | null {
     if (!transcript || typeof transcript !== 'string') {
       return null;
@@ -70,12 +48,7 @@ export class MeetingMapper {
     const cleanTranscript = transcript.trim();
     return cleanTranscript.length > 0 ? cleanTranscript : null;
   }
-
-  /**
-   * Validate meeting data
-   * @param meetingData - Meeting data to validate
-   * @returns True if valid
-   */
+  
   static validate(meetingData: MeetingData): boolean {
     if (!meetingData.client_id || !Number.isInteger(meetingData.client_id)) {
       throw new Error('Valid client_id is required');

@@ -2,11 +2,7 @@ import * as fs from 'fs';
 import { CSVRow } from '../types';
 
 export class CSVParser {
-  /**
-   * Parse CSV file and return array of objects
-   * @param filePath - Path to CSV file
-   * @returns Parsed CSV data
-   */
+
   static async parseFile(filePath: string): Promise<CSVRow[]> {
     try {
       const content = fs.readFileSync(filePath, 'utf-8');
@@ -16,11 +12,6 @@ export class CSVParser {
     }
   }
 
-  /**
-   * Parse CSV content string
-   * @param content - CSV content
-   * @returns Parsed CSV data
-   */
   static parseContent(content: string): CSVRow[] {
     const lines = content.trim().split('\n');
     
@@ -47,11 +38,6 @@ export class CSVParser {
     return data;
   }
 
-  /**
-   * Parse a single CSV line handling quoted values
-   * @param line - CSV line
-   * @returns Array of values
-   */
   static parseCSVLine(line: string): string[] {
     const result: string[] = [];
     let current = '';

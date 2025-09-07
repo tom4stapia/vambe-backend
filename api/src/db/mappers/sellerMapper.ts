@@ -1,11 +1,6 @@
 import { SellerData, ClientCSVRow } from '../types';
 
 export class SellerMapper {
-  /**
-   * Extract unique sellers from CSV data
-   * @param csvData - Array of CSV rows
-   * @returns Array of unique seller data
-   */
   static extractSellersFromCSV(csvData: ClientCSVRow[]): SellerData[] {
     const sellersMap = new Map<string, SellerData>();
     
@@ -19,11 +14,6 @@ export class SellerMapper {
     return Array.from(sellersMap.values());
   }
 
-  /**
-   * Create seller data object
-   * @param name - Seller name
-   * @returns Seller data for database insertion
-   */
   static createSellerData(name: string): SellerData {
     return {
       name: name,
@@ -35,24 +25,14 @@ export class SellerMapper {
     };
   }
 
-  /**
-   * Generate email based on seller name
-   * @param name - Seller name
-   * @returns Generated email
-   */
   static generateEmail(name: string): string {
     const cleanName = name.toLowerCase()
       .replace(/[^a-z\s]/g, '')
       .replace(/\s+/g, '.');
     
-    return `${cleanName}@vambe.com`;
+    return `${cleanName}@vambe.ai`;
   }
 
-  /**
-   * Sanitize seller name
-   * @param name - Raw name from CSV
-   * @returns Sanitized name or null if invalid
-   */
   static sanitizeName(name: string | null): string | null {
     if (!name || typeof name !== 'string') {
       return null;
@@ -62,11 +42,6 @@ export class SellerMapper {
     return cleanName.length > 0 ? cleanName : null;
   }
 
-  /**
-   * Validate seller data
-   * @param sellerData - Seller data to validate
-   * @returns True if valid
-   */
   static validate(sellerData: SellerData): boolean {
     if (!sellerData.name || sellerData.name.trim().length === 0) {
       throw new Error('Seller name cannot be empty');

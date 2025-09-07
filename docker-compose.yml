@@ -13,6 +13,18 @@ services:
     restart: unless-stopped
 
 
+  redis:
+    image: redis:6-alpine
+    container_name: vambe-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - vambe-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
   api:
     build:
       context: ./api
@@ -24,14 +36,34 @@ services:
       - ./api/.env
     depends_on:
       - db
+      - redis
     volumes:
       - ./api:/src/app
       - /src/app/node_modules
     networks:
       - vambe-network
 
+  ai-worker:
+    build:
+      context: ./ai-worker
+      dockerfile: Dockerfile
+    container_name: vambe-ai-worker
+    env_file:
+      - ./api/.env
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./ai-worker:/app
+    networks:
+      - vambe-network
+    restart: unless-stopped
+
 volumes:
   postgres_data:
+  redis_data:
 
 networks:
   vambe-network:

@@ -2,6 +2,7 @@ import { Sequelize, Options, Dialect } from 'sequelize';
 import { initClient, Client } from './Client';
 import { initSeller, Seller } from './Seller';
 import { initMeeting, Meeting } from './Meeting';
+import { initMeetingClassification, MeetingClassification } from './MeetingClassification';
 
 interface DatabaseConfig extends Options {
   username?: string;
@@ -15,6 +16,7 @@ interface Database {
   Client: typeof Client;
   Seller: typeof Seller;
   Meeting: typeof Meeting;
+  MeetingClassification: typeof MeetingClassification;
   sequelize: Sequelize;
   Sequelize: typeof Sequelize;
 }
@@ -35,19 +37,18 @@ if (config.use_env_variable) {
   );
 }
 
-// Initialize models
 const ClientModel = initClient(sequelize);
 const SellerModel = initSeller(sequelize);
 const MeetingModel = initMeeting(sequelize);
+const MeetingClassificationModel = initMeetingClassification(sequelize);
 
-// Setup associations
 const models = {
   Client: ClientModel,
   Seller: SellerModel,
-  Meeting: MeetingModel
+  Meeting: MeetingModel,
+  MeetingClassification: MeetingClassificationModel
 };
 
-// Define associations
 Object.values(models).forEach((model: any) => {
   if (model.associate) {
     model.associate(models);
@@ -58,6 +59,7 @@ const db: Database = {
   Client: ClientModel,
   Seller: SellerModel,
   Meeting: MeetingModel,
+  MeetingClassification: MeetingClassificationModel,
   sequelize,
   Sequelize
 };
