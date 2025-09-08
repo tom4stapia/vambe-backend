@@ -16,8 +16,7 @@ class ClassificationCategory(str, Enum):
     CLOSED_WON = "closed_won"
     CLOSED_LOST = "closed_lost"
 
-class MeetingData(BaseModel):
-    """Meeting data model for processing"""
+class MeetingData(BaseModel):   
     id: int
     client_id: int
     seller_id: int
@@ -25,14 +24,12 @@ class MeetingData(BaseModel):
     transcript: Optional[str] = None
     closed: bool = False
     
-    # Related data
     client_name: Optional[str] = None
     client_email: Optional[str] = None
     seller_name: Optional[str] = None
     seller_email: Optional[str] = None
 
 class ClassificationResult(BaseModel):
-    """Result of meeting classification"""
     categories: List[ClassificationCategory] = Field(default_factory=list)
     confidence_score: float = Field(ge=0.0, le=1.0, description="Confidence score between 0 and 1")
     sentiment: str = Field(description="Overall sentiment: positive, neutral, negative")
@@ -41,13 +38,11 @@ class ClassificationResult(BaseModel):
     next_steps: Optional[str] = None
     summary: Optional[str] = None
     
-    # Metadata
     processed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     processing_time_ms: Optional[int] = None
     model_used: Optional[str] = None
 
 class TaskResult(BaseModel):
-    """Generic task result model"""
     success: bool
     message: str
     data: Optional[Dict[str, Any]] = None
@@ -56,13 +51,11 @@ class TaskResult(BaseModel):
     processing_time_ms: Optional[int] = None
 
 class ClassificationTask(BaseModel):
-    """Task model for meeting classification"""
     meeting_id: int
     force_reprocess: bool = False
     callback_url: Optional[str] = None
     
 class APIResponse(BaseModel):
-    """API response model"""
     success: bool
     data: Optional[Dict[str, Any]] = None
     message: Optional[str] = None

@@ -53,7 +53,6 @@ export class WorkerController {
                 return;
             }
 
-            // Validate all IDs are numbers
             const validIds = meeting_ids.filter(id => !isNaN(Number(id)));
             if (validIds.length !== meeting_ids.length) {
                 res.status(400).json({
@@ -87,9 +86,6 @@ export class WorkerController {
         }
     }
 
-    /**
-     * Get task status and result
-     */
     static async getTaskStatus(req: Request, res: Response): Promise<void> {
         try {
             const { taskId } = req.params;
@@ -118,9 +114,6 @@ export class WorkerController {
         }
     }
 
-    /**
-     * Get worker system statistics
-     */
     static async getWorkerStats(req: Request, res: Response): Promise<void> {
         try {
             const stats = await workerService.getWorkerStats();
@@ -139,9 +132,6 @@ export class WorkerController {
         }
     }
 
-    /**
-     * Health check for worker system
-     */
     static async workerHealthCheck(req: Request, res: Response): Promise<void> {
         try {
             const health = await workerService.healthCheck();
@@ -170,44 +160,6 @@ export class WorkerController {
         }
     }
 
-    /**
-     * Clean up old completed tasks
-     */
-    static async cleanupOldTasks(req: Request, res: Response): Promise<void> {
-        try {
-            const { days } = req.query;
-            const olderThanDays = days ? Number(days) : 7;
-
-            if (isNaN(olderThanDays) || olderThanDays < 1) {
-                res.status(400).json({
-                    success: false,
-                    error: 'Invalid days parameter. Must be a positive number.'
-                });
-                return;
-            }
-
-            const result = await workerService.cleanupOldTasks(olderThanDays);
-
-            res.status(200).json({
-                success: true,
-                message: `Cleaned up ${result.cleaned} old task records`,
-                data: {
-                    cleaned_tasks: result.cleaned,
-                    older_than_days: olderThanDays
-                }
-            });
-        } catch (error: any) {
-            console.error('Error in cleanupOldTasks:', error);
-            res.status(500).json({
-                success: false,
-                error: error.message as string || 'Failed to cleanup old tasks'
-            });
-        }
-    }
-
-    /**
-     * Get classification result for a specific meeting
-     */
     static async getClassificationResult(req: Request, res: Response): Promise<void> {
         try {
             const { meetingId } = req.params;
@@ -247,9 +199,6 @@ export class WorkerController {
         }
     }
 
-    /**
-     * Get all classification results
-     */
     static async getAllClassificationResults(req: Request, res: Response): Promise<void> {
         try {
             const results = await workerService.getAllClassificationResults();
@@ -270,10 +219,7 @@ export class WorkerController {
             });
         }
     }
-
-    /**
-     * Delete classification result for a meeting
-     */
+        
     static async deleteClassificationResult(req: Request, res: Response): Promise<void> {
         try {
             const { meetingId } = req.params;

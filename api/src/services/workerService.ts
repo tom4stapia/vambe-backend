@@ -1,19 +1,6 @@
 import Redis from 'ioredis';
-
-interface ClassificationTask {
-    meeting_id: number;
-    force_reprocess?: boolean;
-    callback_url?: string;
-}
-
-interface TaskResult {
-    success: boolean;
-    message: string;
-    data?: any;
-    error?: string;
-    task_id?: string;
-    processing_time_ms?: number;
-}
+import * as Celery from 'celery-ts';
+import { randomUUID } from 'crypto';
 
 interface TaskStatus {
     task_id: string;
@@ -26,50 +13,38 @@ interface TaskStatus {
 class WorkerService {
     private redis: Redis;
     private redisUrl: string;
+    private celeryClient: Celery.Client;
+    private classifyTask: Celery.Task<any>;   
 
     constructor() {
         this.redisUrl = process.env.REDIS_URL || 'redis://localhost:6379/0';
         this.redis = new Redis(this.redisUrl);
+
+        this.celeryClient = Celery.createClient({
+            brokerUrl: this.redisUrl,                              
+            resultBackend: this.redisUrl.replace('/0', '/1'),          
+        });
+
+        this.classifyTask = this.celeryClient.createTask<any>('classify_meeting');
     }
 
-    async classifyMeeting(meetingId: number, options: Partial<ClassificationTask> = {}): Promise<{ taskId: string }> {
+    async classifyMeeting(meetingId: number, options: { force_reprocess?: boolean; callback_url?: string } = {}) {
         try {
-            const taskData = {
-                meeting_id: meetingId,
-                force_reprocess: options.force_reprocess || false,
-                callback_url: options.callback_url || null
-            };
+            const force = !!options.force_reprocess;
+            const callbackUrl = options.callback_url ?? null;
 
-            const taskId = `classify_meeting_${meetingId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            
-            // Simple format that Celery can understand
-            const taskMessage = {
-                id: taskId,
-                task: 'classify_meeting',
-                args: [meetingId, taskData.force_reprocess || false, taskData.callback_url || null],
-                kwargs: {},
-                retries: 0,
-                eta: null,
-                expires: null
-            };
+            const taskId = randomUUID();
 
-            await this.redis.lpush('celery', JSON.stringify(taskMessage));
-            
-            await this.redis.hset(`celery-task-meta-${taskId}`, {
-                status: 'PENDING',
-                result: null,
-                traceback: null,
-                children: null,
-                date_done: null,
-                task_id: taskId
+            this.classifyTask.applyAsync({
+                args: [meetingId, force, callbackUrl],
+                kwargs: {}
             });
 
             console.log(`Queued classification task for meeting ${meetingId} with task ID: ${taskId}`);
-            
             return { taskId };
-        } catch (error: any) {
-            console.error('Error queuing classification task:', error);
-            throw new Error(`Failed to queue classification task: ${error.message as string}`);
+        } catch (err: any) {
+            console.error('Error queuing classification task:', err);
+            throw new Error(`Failed to queue classification task: ${err.message}`);
         }
     }
 
@@ -94,15 +69,17 @@ class WorkerService {
 
     async getTaskStatus(taskId: string): Promise<TaskStatus> {
         try {
-            const taskData = await this.redis.hgetall(`celery-task-meta-${taskId}`);
+            const taskDataString = await this.redis.get(`celery-task-meta-${taskId}`);
             
-            if (!taskData || Object.keys(taskData).length === 0) {
+            if (!taskDataString) {
                 return {
                     task_id: taskId,
                     status: 'pending',
                     meta: { message: 'Task not found or still queued' }
                 };
             }
+
+            const taskData = JSON.parse(taskDataString);
 
             let result = null;
             if (taskData.result && taskData.result !== 'null') {
@@ -113,15 +90,25 @@ class WorkerService {
                 }
             }
 
+            // Normalize Celery status to our interface
+            let normalizedStatus = taskData.status?.toLowerCase() as any || 'pending';
+            if (normalizedStatus === 'success') {
+                normalizedStatus = 'completed';
+            } else if (normalizedStatus === 'failure') {
+                normalizedStatus = 'failed';
+            } else if (normalizedStatus === 'started' || normalizedStatus === 'progress') {
+                normalizedStatus = 'processing';
+            }
+
             return {
                 task_id: taskId,
-                status: taskData.status?.toLowerCase() as any || 'pending',
+                status: normalizedStatus,
                 result,
                 meta: taskData.meta ? JSON.parse(taskData.meta) : null,
                 error: taskData.traceback
             };
         } catch (error: any) {
-            console.error('Error getting task status:', error);
+            console.error('❌ Error getting task status:', error);
             throw new Error(`Failed to get task status: ${error.message as string}`);
         }
     }
@@ -178,43 +165,94 @@ class WorkerService {
 
     async getWorkerStats(): Promise<any> {
         try {
-            const queueLength = await this.redis.llen('celery');
-            
             const taskKeys = await this.redis.keys('celery-task-meta-*');
             
             const statusCounts = { pending: 0, processing: 0, completed: 0, failed: 0 };
             
-            for (const key of taskKeys.slice(0, 100)) { 
-                const status = await this.redis.hget(key, 'status');
-                if (status) {
-                    const normalizedStatus = status.toLowerCase();
-                    if (normalizedStatus === 'success') {
-                        statusCounts.completed++;
-                    } else if (normalizedStatus === 'failure') {
-                        statusCounts.failed++;
-                    } else if (normalizedStatus === 'started') {
-                        statusCounts.processing++;
-                    } else {
-                        statusCounts.pending++;
+            const sampleSize = Math.min(taskKeys.length, 1000);
+            const sampleKeys = taskKeys.slice(0, sampleSize);
+            
+            for (const key of sampleKeys) { 
+                const taskDataString = await this.redis.get(key);
+                if (taskDataString) {
+                    try {
+                        const taskData = JSON.parse(taskDataString);
+                        const status = taskData.status;
+                        if (status) {
+                            const normalizedStatus = status.toLowerCase();
+                            if (normalizedStatus === 'success') {
+                                statusCounts.completed++;
+                            } else if (normalizedStatus === 'failure') {
+                                statusCounts.failed++;
+                            } else if (normalizedStatus === 'started' || normalizedStatus === 'progress') {
+                                statusCounts.processing++;
+                            } else {
+                                statusCounts.pending++;
+                            }
+                        }
+                    } catch (parseError) {
+                        console.warn(`Failed to parse task data for key ${key}:`, parseError);
                     }
                 }
             }
 
+            const recentTasks = await this.getRecentTasks(24);
+
             return {
-                queue_length: queueLength,
+                queue_length: 0, 
                 total_tasks: taskKeys.length,
+                sampled_tasks: sampleSize,
                 task_counts: statusCounts,
-                redis_connected: true
+                recent_tasks_24h: recentTasks.length,
+                redis_connected: true,
+                timestamp: new Date().toISOString()
             };
         } catch (error: any) {
-            console.error('Error getting worker stats:', error);
+            console.error('❌ Error getting worker stats:', error);
             return {
                 queue_length: 0,
                 total_tasks: 0,
+                sampled_tasks: 0,
                 task_counts: { pending: 0, processing: 0, completed: 0, failed: 0 },
+                recent_tasks_24h: 0,
                 redis_connected: false,
-                error: error.message as string
+                error: error.message as string,
+                timestamp: new Date().toISOString()
             };
+        }
+    }
+
+    async getRecentTasks(hours: number = 24): Promise<any[]> {
+        try {
+            const cutoffTime = Date.now() - (hours * 60 * 60 * 1000);
+            const taskKeys = await this.redis.keys('celery-task-meta-*');
+            const recentTasks: any[] = [];
+
+            for (const key of taskKeys.slice(0, 500)) { 
+                const taskDataString = await this.redis.get(key);
+                if (taskDataString) {
+                    try {
+                        const taskData = JSON.parse(taskDataString);
+                        if (taskData.date_done) {
+                            const taskDate = new Date(taskData.date_done).getTime();
+                            if (taskDate > cutoffTime) {
+                                recentTasks.push({
+                                    task_id: taskData.task_id,
+                                    status: taskData.status,
+                                    date_done: taskData.date_done
+                                });
+                            }
+                        }
+                    } catch (parseError) {
+                        console.warn(`Failed to parse task data for key ${key}:`, parseError);
+                    }
+                }
+            }
+
+            return recentTasks.sort((a, b) => new Date(b.date_done).getTime() - new Date(a.date_done).getTime());
+        } catch (error: any) {
+            console.error('❌ Error getting recent tasks:', error);
+            return [];
         }
     }
 
@@ -222,12 +260,13 @@ class WorkerService {
         try {
             await this.redis.ping();
 
-            const queueLength = await this.redis.llen('celery');
+            const taskKeys = await this.redis.keys('celery-task-meta-*');
+            const totalTasks = taskKeys.length;
 
             return {
                 healthy: true,
                 redis: true,
-                message: `Worker system is healthy. Queue length: ${queueLength}`
+                message: `Worker system is healthy. Total tasks processed: ${totalTasks}`
             };
         } catch (error: any) {
             return {
@@ -235,31 +274,6 @@ class WorkerService {
                 redis: false,
                 message: `Worker system unhealthy: ${error.message as string}`
             };
-        }
-    }
-
-    async cleanupOldTasks(olderThanDays: number = 7): Promise<{ cleaned: number }> {
-        try {
-            const cutoffTime = Date.now() - (olderThanDays * 24 * 60 * 60 * 1000);
-            const taskKeys = await this.redis.keys('celery-task-meta-*');
-            let cleaned = 0;
-
-            for (const key of taskKeys) {
-                const dateField = await this.redis.hget(key, 'date_done');
-                if (dateField) {
-                    const taskDate = new Date(dateField).getTime();
-                    if (taskDate < cutoffTime) {
-                        await this.redis.del(key);
-                        cleaned++;
-                    }
-                }
-            }
-
-            console.log(`Cleaned up ${cleaned} old task records`);
-            return { cleaned };
-        } catch (error: any) {
-            console.error('Error cleaning up old tasks:', error);
-            throw new Error(`Failed to cleanup old tasks: ${error.message as string}`);
         }
     }
 

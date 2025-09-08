@@ -100,7 +100,6 @@ class RedisQueueClient:
             return False
 
     def test_connection(self) -> bool:
-        """Test Redis connection"""
         try:
             if not self.redis_client:
                 self.connect()

@@ -1,111 +1,126 @@
-# Vambe AI Worker - Arquitectura Modular
+# Vambe AI Worker - Arquitectura Modular con Celery
 
 ## 📁 Estructura Modular Organizada
 
 ```
 ai-worker/
 ├── 📁 core/                   # 🏗️ Componentes principales
-│   ├── database.py           # 🗄️ Cliente PostgreSQL
+│   ├── database.py           # 🗄️ Cliente PostgreSQL con ORM
+│   ├── database_config.py    # ⚙️ Configuración SQLAlchemy
 │   ├── redis_client.py       # 🔴 Cliente Redis
-│   ├── task_processor.py     # ⚙️ Procesador de tareas
+│   ├── tasks.py              # 🎯 Tareas de Celery
 │   └── __init__.py
 ├── 📁 services/              # 🔧 Servicios de negocio
 │   ├── classification_service.py  # 🤖 Servicio de clasificación
 │   └── __init__.py
 ├── 📁 models/                # 📋 Modelos de datos
 │   ├── models.py             # Modelos Pydantic
+│   ├── database_models.py    # Modelos SQLAlchemy ORM
 │   └── __init__.py
 ├── 📁 config/                # ⚙️ Configuración
 │   ├── config.py             # Configuración de la aplicación
 │   └── __init__.py
-├── 📁 tests/                 # 🧪 Tests y validaciones
-│   ├── test_modules.py       # Script de pruebas
-│   └── __init__.py
-├── worker.py                 # 🎯 Punto de entrada principal
+├── app.py                    # 🌸 Aplicación Celery
+├── worker.py                 # 🎯 Worker de Celery
 ├── __init__.py               # 📦 Paquete Python principal
 ├── requirements.txt          # 📋 Dependencias
 ├── Dockerfile               # 🐳 Docker
 └── README_WORKER.md         # 📖 Esta documentación
 ```
 
-## 🏗️ Arquitectura
+## 🏗️ Arquitectura con Celery
 
-### **1. Worker Principal (`worker.py`)**
-- **Responsabilidad**: Orquestar componentes modulares
+### **1. Aplicación Celery (`app.py`)**
+- **Responsabilidad**: Configuración y setup de Celery
+- **Funciones**:
+  - Configurar broker (Redis)
+  - Configurar result backend
+  - Auto-descubrir tareas
+  - Configurar routing y colas
+
+### **2. Tareas de Celery (`core/tasks.py`)**
+- **Responsabilidad**: Definir tareas asíncronas
+- **Funciones**:
+  - `classify_meeting_task`: Procesar clasificación de reuniones
+  - `health_check_task`: Verificar salud del sistema
+  - Manejo de estados y reintentos
+  - Integración con servicios modulares
+
+### **3. Worker de Celery (`worker.py`)**
+- **Responsabilidad**: Ejecutar worker de Celery
 - **Funciones**:
   - Inicializar conexiones
-  - Ejecutar loop principal
-  - Manejar señales de apagado
-  - Coordinar componentes
+  - Iniciar worker con configuración
+  - Manejar concurrencia
+  - Procesar colas específicas
 
-### **2. Procesador de Tareas (`task_processor.py`)**
-- **Responsabilidad**: Procesar tareas de clasificación
-- **Funciones**:
-  - Validar formato de tareas
-  - Ejecutar lógica de negocio
-  - Convertir datos (datetime → string)
-  - Coordinar guardado en DB y Redis
+### **4. Servicios Modulares**
+- **Cliente Redis (`redis_client.py`)**: Comunicación con Redis
+- **Cliente Base de Datos (`database.py`)**: Comunicación con PostgreSQL usando SQLAlchemy ORM
+- **Configuración DB (`database_config.py`)**: Configuración y gestión de sesiones SQLAlchemy
+- **Servicio de Clasificación (`classification_service.py`)**: Lógica de negocio
 
-### **3. Cliente Redis (`redis_client.py`)**
-- **Responsabilidad**: Comunicación con Redis
-- **Funciones**:
-  - Obtener tareas de la cola
-  - Almacenar resultados
-  - Actualizar estado de tareas
-  - Gestionar conexiones
+### **5. Modelos de Datos**
+- **Modelos Pydantic (`models.py`)**: Validación y serialización de datos
+- **Modelos SQLAlchemy (`database_models.py`)**: Mapeo ORM de la base de datos existente
 
-### **4. Cliente Base de Datos (`database.py`)**
-- **Responsabilidad**: Comunicación con PostgreSQL
-- **Funciones**:
-  - Guardar clasificaciones
-  - Actualizar registros existentes
-  - Manejar transacciones
-  - Gestionar conexiones
-
-## 🔄 Flujo de Trabajo
+## 🔄 Flujo de Trabajo con Celery
 
 ```mermaid
 graph TD
-    A[Worker.py] --> B[Test Connections]
-    B --> C[Main Loop]
-    C --> D[Get Task from Redis]
-    D --> E{Task Available?}
-    E -->|No| C
-    E -->|Yes| F[Process Task]
-    F --> G[Validate Task]
-    G --> H[Execute Classification]
-    H --> I[Convert Datetime]
-    I --> J[Save to Database]
-    J --> K[Save to Redis]
-    K --> L[Update Task Status]
-    L --> C
+    A[API/Client] --> B[Enqueue Task]
+    B --> C[Redis Queue]
+    C --> D[Celery Worker]
+    D --> E[Execute Task]
+    E --> F[Update Progress]
+    F --> G[Process Classification]
+    G --> H[Save to Database]
+    H --> I[Store in Redis]
+    I --> J[Update Result]
+    J --> K[Task Complete]
 ```
 
-## 🚀 Uso
+## 🚀 Uso con Celery
 
-### **Ejecución Normal**
+### **Ejecución con Docker Compose (Recomendado)**
+```bash
+# Iniciar todos los servicios
+docker compose up -d
+
+# Ver logs del worker
+docker compose logs -f ai-worker
+```
+
+### **Ejecución Manual**
 ```bash
 cd ai-worker
+
+# Iniciar worker de Celery
 python worker.py
 ```
 
-### **Pruebas de Componentes**
+### **Comandos Celery Útiles**
 ```bash
-cd ai-worker
-python test_modules.py
+# Ver workers activos
+celery -A app inspect active
+
+# Ver estadísticas
+celery -A app inspect stats
+
+# Enviar tarea de prueba
+celery -A app call core.tasks.health_check_task
+
+# Ver colas
+celery -A app inspect active_queues
 ```
+
 
 ## 🧪 Pruebas
 
-### **Prueba de Imports**
-```bash
-python -c "from task_processor import task_processor; print('✅ Imports OK')"
-```
-
 ### **Prueba de Conexiones**
 ```bash
-python -c "from redis_client import redis_client; redis_client.test_connection()"
-python -c "from database import db_client; db_client.test_connection()"
+python -c "from core.redis_client import redis_client; redis_client.test_connection()"
+python -c "from core.database import db_client; db_client.test_connection()"
 ```
 
 ## ⚙️ Configuración
@@ -130,6 +145,7 @@ redis==5.0.1
 pydantic==2.5.2
 python-dotenv==1.0.0
 celery==5.3.4
+sqlalchemy==2.0.23
 ```
 
 ## 🛠️ Desarrollo
@@ -169,18 +185,40 @@ new_module = NewModule()
 # Ver logs en tiempo real
 docker compose logs -f ai-worker
 
-# Ver estado de conexiones
-docker compose exec ai-worker python tests/test_modules.py
-
 # Ejecutar pruebas específicas
 docker compose exec ai-worker python -c "from core.database import db_client; db_client.test_connection()"
 ```
 
-## 🎯 Beneficios de la Arquitectura Modular
+## 🎯 Beneficios de la Arquitectura Modular con Celery
 
+### **Ventajas de Celery**
+- **🚀 Escalabilidad**: Múltiples workers automáticamente
+- **⚡ Concurrencia**: Procesamiento paralelo de tareas
+- **🔄 Reintentos**: Manejo automático de fallos
+- **📊 Monitoreo**: Logs detallados para supervisión
+- **🎯 Distribución**: Tareas distribuidas entre workers
+- **⏰ Programación**: Tareas programadas y periódicas
+
+### **Ventajas de la Modularización**
 - **🔧 Mantenibilidad**: Cada módulo tiene responsabilidad única
 - **🧪 Testabilidad**: Componentes independientes fáciles de testear
 - **🔄 Reutilización**: Módulos pueden usarse en otros proyectos
 - **📈 Escalabilidad**: Fácil agregar nuevos módulos
 - **🐛 Debugging**: Errores aislados por módulo
 - **👥 Colaboración**: Equipos pueden trabajar en módulos separados
+
+### **Migración Exitosa**
+- **✅ Compatibilidad**: Servicios modulares existentes se mantienen
+- **✅ Funcionalidad**: Misma lógica de negocio, mejor infraestructura
+- **✅ Monitoreo**: Logs detallados proporcionan visibilidad completa
+- **✅ Escalabilidad**: Fácil agregar más workers según demanda
+- **✅ ORM**: SQLAlchemy para acceso robusto a la base de datos existente
+- **✅ Consistencia**: Modelos ORM coinciden con la estructura de la API
+
+### **Ventajas del ORM SQLAlchemy**
+- **🔗 Relaciones**: Manejo automático de relaciones entre tablas
+- **🛡️ Seguridad**: Protección contra SQL injection
+- **🔄 Transacciones**: Manejo automático de transacciones
+- **📊 Consultas**: API de consultas más intuitiva y mantenible
+- **🎯 Tipado**: Mejor integración con sistemas de tipos de Python
+- **🔧 Mantenimiento**: Código más limpio y fácil de mantener

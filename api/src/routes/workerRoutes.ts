@@ -14,6 +14,4 @@ router.get('/results/:meetingId', WorkerController.getClassificationResult);
 router.get('/results', WorkerController.getAllClassificationResults);
 router.delete('/results/:meetingId', WorkerController.deleteClassificationResult);
 
-router.post('/cleanup', WorkerController.cleanupOldTasks);
-
 export default router;

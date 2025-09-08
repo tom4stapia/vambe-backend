@@ -10,7 +10,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.models import MeetingData, ClassificationResult, ClassificationCategory
 
 class DummyClassificationService:
-    """Dummy implementation of meeting classification service"""
     
     def __init__(self):
         self.model_name = "dummy_classifier_v1.0"
