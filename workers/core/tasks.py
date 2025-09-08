@@ -35,23 +35,7 @@ def classify_meeting_task(
             },
         )
 
-        max_db_retries = 3
-        meeting_data_dict = None
-
-        for attempt in range(max_db_retries):
-            try:
-                meeting_data_dict = db_client.get_meeting(meeting_id)
-                break
-            except Exception as e:
-                if attempt < max_db_retries - 1:
-                    print(
-                        f"⏳ Database connection attempt {attempt + 1}/{max_db_retries} failed: {str(e)}"
-                    )
-                    time.sleep(2)
-                else:
-                    raise Exception(
-                        f"Database connection failed after {max_db_retries} attempts: {str(e)}"
-                    )
+        meeting_data_dict = db_client.get_meeting(meeting_id)
 
         if not meeting_data_dict:
             raise Exception(f"Meeting {meeting_id} not found in database")

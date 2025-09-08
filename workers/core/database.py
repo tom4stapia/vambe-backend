@@ -1,7 +1,3 @@
-"""
-SQLAlchemy ORM-based database client
-"""
-
 import os
 import sys
 from typing import Dict, Any, Optional
