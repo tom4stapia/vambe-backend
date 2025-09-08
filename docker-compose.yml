@@ -43,11 +43,11 @@ services:
     networks:
       - vambe-network
 
-  ai-worker:
+  workers:
     build:
-      context: ./ai-worker
+      context: ./workers
       dockerfile: Dockerfile
-    container_name: vambe-ai-worker
+    container_name: vambe-workers
     env_file:
       - ./api/.env
     environment:
@@ -58,7 +58,7 @@ services:
       - db
       - redis
     volumes:
-      - ./ai-worker:/app
+      - ./workers:/app
     networks:
       - vambe-network
     restart: unless-stopped
