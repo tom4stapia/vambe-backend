@@ -73,6 +73,17 @@ async function queueClassificationsForSeed(): Promise<void> {
 
     for (const meeting of meetings) {
       try {
+        const meetingClassification = await db.MeetingClassification.findOne({
+          where: {
+            meeting_id: meeting.id
+          }
+        });
+
+        if (meetingClassification) {
+          
+          console.log(`Skipping classification for meeting ${meeting.id} because it already has a classification`);
+          continue;
+        }
         const result = await workerService.classifyMeeting(meeting.id);
         taskIds.push(result.taskId);
         queued++;

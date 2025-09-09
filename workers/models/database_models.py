@@ -62,7 +62,22 @@ class MeetingClassification(Base):
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     meeting_id = Column(Integer, ForeignKey('meetings.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False, unique=True)
-    categories = Column(JSON, nullable=False, default=list)
+    
+    # Análisis de enums del sistema
+    business_sector = Column(Text, nullable=True)  # Análisis de BusinessSector
+    company_size = Column(Text, nullable=True)  # Análisis de CompanySize
+    region = Column(Text, nullable=True)  # Análisis de Region
+    lead_source = Column(Text, nullable=True)  # Análisis de LeadSource
+    vambe_product = Column(Text, nullable=True)  # Análisis de VambeProduct
+    use_case = Column(Text, nullable=True)  # Análisis de UseCase
+    primary_pain_point = Column(Text, nullable=True)  # Análisis de PrimaryPainPoint
+    urgency = Column(Boolean, nullable=True)  # Análisis de Urgency
+    decision_maker_role = Column(Text, nullable=True)  # Análisis de DecisionMakerRole
+    purchase_stage = Column(Text, nullable=True)  # Análisis de PurchaseStage
+    language = Column(Text, nullable=True)  # Análisis de Language
+    lost_client_bad_meeting = Column(Boolean, nullable=True)  # Cliente perdido por mala reunión
+    
+    # Campos mantenidos
     confidence_score = Column(Numeric(3, 2), nullable=False, default=0.0)
     sentiment = Column(Enum(SentimentEnum), nullable=False)
     key_topics = Column(JSON, nullable=False, default=list)

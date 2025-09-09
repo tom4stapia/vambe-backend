@@ -11,11 +11,15 @@ ai-worker/
 │   ├── tasks.py              # 🎯 Tareas de Celery
 │   └── __init__.py
 ├── 📁 services/              # 🔧 Servicios de negocio
-│   ├── classification_service.py  # 🤖 Servicio de clasificación
+│   ├── classification_service.py  # 🤖 Servicio de clasificación (dummy)
+│   ├── openai_classification_service.py  # 🧠 Servicio de clasificación con OpenAI
 │   └── __init__.py
 ├── 📁 models/                # 📋 Modelos de datos
 │   ├── models.py             # Modelos Pydantic
 │   ├── database_models.py    # Modelos SQLAlchemy ORM
+│   └── __init__.py
+├── 📁 enums/                 # 🏷️ Enumeraciones
+│   ├── enums.py              # Enumeraciones del sistema
 │   └── __init__.py
 ├── 📁 config/                # ⚙️ Configuración
 │   ├── config.py             # Configuración de la aplicación
@@ -136,6 +140,10 @@ POSTGRES_PORT=5432
 POSTGRES_DB=vambe_db
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=password
+
+# OpenAI
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-3.5-turbo
 ```
 
 ### **Dependencias**
@@ -146,6 +154,7 @@ pydantic==2.5.2
 python-dotenv==1.0.0
 celery==5.3.4
 sqlalchemy==2.0.23
+openai==1.3.7
 ```
 
 ## 🛠️ Desarrollo
@@ -222,3 +231,100 @@ docker compose exec ai-worker python -c "from core.database import db_client; db
 - **📊 Consultas**: API de consultas más intuitiva y mantenible
 - **🎯 Tipado**: Mejor integración con sistemas de tipos de Python
 - **🔧 Mantenimiento**: Código más limpio y fácil de mantener
+
+## 🧠 Integración con OpenAI
+
+### **Servicio de Clasificación Inteligente**
+El worker ahora incluye un servicio de clasificación avanzado que utiliza OpenAI GPT-3.5-turbo para analizar transcripciones de reuniones y proporcionar clasificaciones precisas y contextuales.
+
+### **Características del Servicio OpenAI**
+- **🎯 Modelo Costo-Efectivo**: Utiliza GPT-3.5-turbo (modelo más económico)
+- **📊 Clasificación Inteligente**: Analiza transcripciones para identificar categorías de reunión
+- **😊 Análisis de Sentimiento**: Detecta el tono y actitud del cliente
+- **📝 Extracción de Temas**: Identifica temas clave discutidos
+- **✅ Items de Acción**: Extrae compromisos y próximos pasos
+- **🔄 Reintentos Automáticos**: Manejo robusto de errores de API
+- **⚡ Fallback Inteligente**: Sistema de respaldo si OpenAI falla
+
+### **Prompt de Clasificación Avanzado**
+El servicio utiliza un prompt especializado que:
+- Analiza cada enum del sistema individualmente
+- Selecciona EXACTAMENTE UNA categoría de cada enum (no inventa nuevas)
+- Proporciona análisis específicos para TODOS los enums
+- NUNCA devuelve null - siempre proporciona análisis o "No specific indicators found"
+- Evita respuestas genéricas como "OTHER"
+- Usa únicamente los valores exactos de los enums definidos
+- Calcula puntuaciones de confianza
+- Extrae información estructurada en formato JSON
+- Proporciona resúmenes concisos y accionables
+
+### **Análisis de Enums del Sistema**
+El sistema ahora analiza cada enum del sistema por separado y proporciona análisis específicos:
+
+- `business_sector`: Análisis del sector de negocio (retail, ecommerce, financial_services, etc.)
+- `company_size`: Análisis del tamaño de la empresa (small, medium, large, enterprise)
+- `region`: Análisis de la región geográfica (latam_south, latam_north, north_america, etc.)
+- `lead_source`: Análisis de la fuente del lead (referral, seo, sem_ads, email, etc.)
+- `vambe_product`: Análisis del producto Vambe relevante (mercur, iris, ads, axis)
+- `use_case`: Análisis del caso de uso principal (lead_scoring, customer_segmentation, etc.)
+- `primary_pain_point`: Análisis del punto de dolor principal (lack_visibility, slow_reporting, etc.)
+- `urgency`: Análisis del nivel de urgencia (immediate, short, medium, long)
+- `decision_maker_role`: Análisis del rol del tomador de decisiones (ceo, cto, cfo, etc.)
+- `purchase_stage`: Análisis de la etapa de compra (discovery, evaluation, pilot, etc.)
+- `language`: Análisis del idioma principal (es, en)
+
+**Ventajas del Análisis de Enums:**
+- **🎯 Precisión**: Selecciona categorías específicas de los enums definidos
+- **📊 Granularidad**: Análisis detallado por cada enum del sistema
+- **🚫 Sin "OTHER"**: Evita respuestas genéricas
+- **🚫 Sin nulls**: Siempre proporciona análisis para todos los enums
+- **🔒 Categorías Controladas**: Solo usa valores predefinidos de los enums
+- **💡 Accionable**: Cada análisis es específico y útil para el sistema
+
+### **Configuración de OpenAI**
+```bash
+# Variable de entorno requerida
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Modelo por defecto (configurable)
+OPENAI_MODEL=gpt-3.5-turbo
+```
+
+### **Ventajas de la Clasificación con IA**
+- **🎯 Precisión**: Análisis contextual más preciso que reglas estáticas
+- **📈 Escalabilidad**: Procesa cualquier volumen de transcripciones
+- **🔄 Consistencia**: Resultados consistentes y objetivos
+- **💡 Insights**: Extrae información valiosa automáticamente
+- **⚡ Velocidad**: Procesamiento rápido de reuniones
+- **💰 Costo-Efectivo**: Utiliza el modelo más económico de OpenAI
+
+## 🗄️ Migración de Base de Datos
+
+### **Actualización de Estructura**
+Las nuevas columnas de análisis por categoría individual se han agregado a la migración existente `20250907210610-create-meetings-classifications.cjs`. Para aplicar los cambios:
+
+```bash
+# Desde el directorio api/
+npm run db:reset  # Si quieres recrear la base de datos
+# O si ya tienes datos:
+npm run db:migrate
+```
+
+### **Nuevas Columnas Incluidas**
+La migración existente ahora incluye las siguientes columnas adicionales en `meetings_classifications`:
+- `sales_qualified` (TEXT)
+- `needs_follow_up` (TEXT)
+- `not_interested` (TEXT)
+- `pricing_discussion` (TEXT)
+- `technical_questions` (TEXT)
+- `competitor_mention` (TEXT)
+- `decision_maker_absent` (TEXT)
+- `budget_constraints` (TEXT)
+- `timeline_discussion` (TEXT)
+- `closed_won` (TEXT)
+- `closed_lost` (TEXT)
+
+### **Compatibilidad**
+- ✅ **Retrocompatible**: Las columnas existentes se mantienen
+- ✅ **Sin pérdida de datos**: Los datos existentes se preservan
+- ✅ **Rollback disponible**: La migración puede revertirse si es necesario

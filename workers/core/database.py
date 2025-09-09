@@ -61,7 +61,21 @@ class DatabaseClient:
         classification: MeetingClassification,
         data: Dict[str, Any],
     ):
-        classification.categories = data.get("categories", [])
+        # Análisis de enums del sistema
+        classification.business_sector = data.get("business_sector")
+        classification.company_size = data.get("company_size")
+        classification.region = data.get("region")
+        classification.lead_source = data.get("lead_source")
+        classification.vambe_product = data.get("vambe_product")
+        classification.use_case = data.get("use_case")
+        classification.primary_pain_point = data.get("primary_pain_point")
+        classification.urgency = data.get("urgency")
+        classification.decision_maker_role = data.get("decision_maker_role")
+        classification.purchase_stage = data.get("purchase_stage")
+        classification.language = data.get("language")
+        classification.lost_client_bad_meeting = data.get("lost_client_bad_meeting")
+        
+        # Campos mantenidos
         classification.confidence_score = data.get("confidence_score", 0.0)
         sentiment_str = data.get("sentiment", "neutral")
         classification.sentiment = (
@@ -91,7 +105,22 @@ class DatabaseClient:
 
         classification = MeetingClassification(
             meeting_id=data.get("meeting_id"),
-            categories=data.get("categories", []),
+            
+            # Análisis de enums del sistema
+            business_sector=data.get("business_sector"),
+            company_size=data.get("company_size"),
+            region=data.get("region"),
+            lead_source=data.get("lead_source"),
+            vambe_product=data.get("vambe_product"),
+            use_case=data.get("use_case"),
+            primary_pain_point=data.get("primary_pain_point"),
+            urgency=data.get("urgency"),
+            decision_maker_role=data.get("decision_maker_role"),
+            purchase_stage=data.get("purchase_stage"),
+            language=data.get("language"),
+            lost_client_bad_meeting=data.get("lost_client_bad_meeting"),
+            
+            # Campos mantenidos
             confidence_score=data.get("confidence_score", 0.0),
             sentiment=sentiment_enum,
             key_topics=data.get("key_topics", []),
@@ -117,7 +146,22 @@ class DatabaseClient:
                     return {
                         "id": classification.id,
                         "meeting_id": classification.meeting_id,
-                        "categories": classification.categories,
+                        
+                        # Análisis de enums del sistema
+                        "business_sector": classification.business_sector,
+                        "company_size": classification.company_size,
+                        "region": classification.region,
+                        "lead_source": classification.lead_source,
+                        "vambe_product": classification.vambe_product,
+                        "use_case": classification.use_case,
+                        "primary_pain_point": classification.primary_pain_point,
+                        "urgency": classification.urgency,
+                        "decision_maker_role": classification.decision_maker_role,
+                        "purchase_stage": classification.purchase_stage,
+                        "language": classification.language,
+                        "lost_client_bad_meeting": classification.lost_client_bad_meeting,
+                        
+                        # Campos mantenidos
                         "confidence_score": float(classification.confidence_score),
                         "sentiment": (
                             classification.sentiment.value

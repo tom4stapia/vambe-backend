@@ -17,7 +17,7 @@ class Config:
     API_BASE_URL: str = os.getenv("API_BASE_URL", "http://localhost:3000")
 
     OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")
-    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4")
+    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
     WORKER_CONCURRENCY: int = int(os.getenv("WORKER_CONCURRENCY", "2"))
     TASK_TIMEOUT: int = int(os.getenv("TASK_TIMEOUT", "300"))  # 5 minutes

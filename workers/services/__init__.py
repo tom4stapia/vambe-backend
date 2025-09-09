@@ -1,3 +1,3 @@
-from .classification_service import classification_service
+from .openai_classification_service import openai_classification_service
 
-__all__ = ['classification_service']
+__all__ = ['openai_classification_service']

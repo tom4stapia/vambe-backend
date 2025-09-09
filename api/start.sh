@@ -12,9 +12,6 @@ run_command() {
     fi
 }
 
-
-run_command "npm run db:drop"
-
 echo "🔄 Running create database..."
 run_command "npm run db:create"
 

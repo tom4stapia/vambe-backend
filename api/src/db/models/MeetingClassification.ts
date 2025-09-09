@@ -3,6 +3,22 @@ import { Sequelize, DataTypes, Model } from 'sequelize';
 export interface MeetingClassificationAttributes {
   id?: number;
   meeting_id: number;
+  
+  // Análisis de enums del sistema
+  business_sector?: string;
+  company_size?: string;
+  region?: string;
+  lead_source?: string;
+  vambe_product?: string;
+  use_case?: string;
+  primary_pain_point?: string;
+  urgency?: boolean;
+  decision_maker_role?: string;
+  purchase_stage?: string;
+  language?: string;
+  lost_client_bad_meeting?: boolean;
+  
+  // Campos mantenidos
   categories: string[];
   confidence_score: number;
   sentiment: 'positive' | 'neutral' | 'negative';
@@ -23,6 +39,22 @@ export class MeetingClassification extends Model<MeetingClassificationAttributes
   implements MeetingClassificationAttributes {
   public id!: number;
   public meeting_id!: number;
+  
+  // Análisis de enums del sistema
+  public business_sector?: string;
+  public company_size?: string;
+  public region?: string;
+  public lead_source?: string;
+  public vambe_product?: string;
+  public use_case?: string;
+  public primary_pain_point?: string;
+  public urgency?: boolean;
+  public decision_maker_role?: string;
+  public purchase_stage?: string;
+  public language?: string;
+  public lost_client_bad_meeting?: boolean;
+  
+  // Campos mantenidos
   public categories!: string[];
   public confidence_score!: number;
   public sentiment!: 'positive' | 'neutral' | 'negative';
@@ -66,6 +98,70 @@ export function initMeetingClassification(sequelize: Sequelize): typeof MeetingC
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
+      
+      // Análisis de enums del sistema
+      business_sector: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'Análisis de BusinessSector basado en la reunión'
+      },
+      company_size: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'Análisis de CompanySize basado en la reunión'
+      },
+      region: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'Análisis de Region basado en la reunión'
+      },
+      lead_source: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'Análisis de LeadSource basado en la reunión'
+      },
+      vambe_product: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'Análisis de VambeProduct basado en la reunión'
+      },
+      use_case: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'Análisis de UseCase basado en la reunión'
+      },
+      primary_pain_point: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'Análisis de PrimaryPainPoint basado en la reunión'
+      },
+      urgency: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+        comment: 'Análisis de Urgency basado en la reunión'
+      },
+      decision_maker_role: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'Análisis de DecisionMakerRole basado en la reunión'
+      },
+      purchase_stage: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'Análisis de PurchaseStage basado en la reunión'
+      },
+      language: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'Análisis de Language basado en la reunión'
+      },
+      lost_client_bad_meeting: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+        comment: 'Cliente perdido por mala reunión'
+      },
+      
+      // Campos mantenidos
       categories: {
         type: DataTypes.JSON,
         allowNull: false,

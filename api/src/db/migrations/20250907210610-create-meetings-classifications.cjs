@@ -15,6 +15,70 @@ module.exports = {
         allowNull: false,
         unique: true
       },
+      
+      // Análisis de enums del sistema
+      business_sector: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+        comment: 'Análisis de BusinessSector basado en la reunión'
+      },
+      company_size: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+        comment: 'Análisis de CompanySize basado en la reunión'
+      },
+      region: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+        comment: 'Análisis de Region basado en la reunión'
+      },
+      lead_source: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+        comment: 'Análisis de LeadSource basado en la reunión'
+      },
+      vambe_product: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+        comment: 'Análisis de VambeProduct basado en la reunión'
+      },
+      use_case: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+        comment: 'Análisis de UseCase basado en la reunión'
+      },
+      primary_pain_point: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+        comment: 'Análisis de PrimaryPainPoint basado en la reunión'
+      },
+      urgency: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        comment: 'Análisis de Urgency basado en la reunión'
+      },
+      decision_maker_role: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+        comment: 'Análisis de DecisionMakerRole basado en la reunión'
+      },
+      purchase_stage: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+        comment: 'Análisis de PurchaseStage basado en la reunión'
+      },
+      language: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+        comment: 'Análisis de Language basado en la reunión'
+      },
+      lost_client_bad_meeting: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        comment: 'Cliente perdido por mala reunión'
+      },
+      
+      // Campos mantenidos
       categories: {
         type: Sequelize.JSON,
         allowNull: false,

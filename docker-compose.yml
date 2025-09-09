@@ -2,7 +2,7 @@ services:
   db:
     image: postgres:15-alpine
     env_file:
-      - ./api/.env
+      - .env
     ports:
       - "5432:5432"
     volumes:
@@ -33,7 +33,7 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - ./api/.env
+      - .env
     depends_on:
       - db
       - redis
@@ -49,11 +49,7 @@ services:
       dockerfile: Dockerfile
     container_name: vambe-workers
     env_file:
-      - ./api/.env
-    environment:
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - .env
     depends_on:
       - db
       - redis

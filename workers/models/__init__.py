@@ -5,7 +5,6 @@ Data models for Vambe AI Worker
 from .models import (
     MeetingData,
     ClassificationResult,
-    ClassificationCategory,
     TaskResult,
     ClassificationTask,
     APIResponse
@@ -14,7 +13,6 @@ from .models import (
 __all__ = [
     'MeetingData',
     'ClassificationResult',
-    'ClassificationCategory',
     'TaskResult',
     'ClassificationTask',
     'APIResponse'

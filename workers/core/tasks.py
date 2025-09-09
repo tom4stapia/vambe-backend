@@ -12,7 +12,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import app
 from models.models import MeetingData
-from services.classification_service import classification_service
+from services.openai_classification_service import openai_classification_service
 from core.database import db_client
 from core.redis_client import redis_client
 
@@ -53,7 +53,7 @@ def classify_meeting_task(
             seller_email=meeting_data_dict.get("seller_email"),
         )
 
-        classification_result = classification_service.classify_meeting(meeting_data)
+        classification_result = openai_classification_service.classify_meeting(meeting_data)
         classification_data = classification_result.model_dump()
         classification_data["meeting_id"] = meeting_id
 

@@ -3,18 +3,6 @@ from pydantic import BaseModel, Field
 from datetime import datetime, timezone
 from enum import Enum
 
-class ClassificationCategory(str, Enum):
-    SALES_QUALIFIED = "sales_qualified"
-    NEEDS_FOLLOW_UP = "needs_follow_up"
-    NOT_INTERESTED = "not_interested"
-    PRICING_DISCUSSION = "pricing_discussion"
-    TECHNICAL_QUESTIONS = "technical_questions"
-    COMPETITOR_MENTION = "competitor_mention"
-    DECISION_MAKER_ABSENT = "decision_maker_absent"
-    BUDGET_CONSTRAINTS = "budget_constraints"
-    TIMELINE_DISCUSSION = "timeline_discussion"
-    CLOSED_WON = "closed_won"
-    CLOSED_LOST = "closed_lost"
 
 class MeetingData(BaseModel):   
     id: int
@@ -30,7 +18,19 @@ class MeetingData(BaseModel):
     seller_email: Optional[str] = None
 
 class ClassificationResult(BaseModel):
-    categories: List[ClassificationCategory] = Field(default_factory=list)
+    business_sector: Optional[str] = None
+    company_size: Optional[str] = None
+    region: Optional[str] = None
+    lead_source: Optional[str] = None
+    vambe_product: Optional[str] = None
+    use_case: Optional[str] = None
+    primary_pain_point: Optional[str] = None
+    urgency: Optional[bool] = None
+    decision_maker_role: Optional[str] = None
+    purchase_stage: Optional[str] = None
+    language: Optional[str] = None
+    lost_client_bad_meeting: Optional[bool] = None
+    
     confidence_score: float = Field(ge=0.0, le=1.0, description="Confidence score between 0 and 1")
     sentiment: str = Field(description="Overall sentiment: positive, neutral, negative")
     key_topics: List[str] = Field(default_factory=list, description="Key topics discussed")
