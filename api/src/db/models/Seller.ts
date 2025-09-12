@@ -19,7 +19,6 @@ export class Seller extends Model<SellerAttributes> implements SellerAttributes 
   public created_at!: Date;
   public updated_at!: Date;
 
-  // Association methods will be added by Sequelize
   public readonly meetings?: any[];
 
   static associate(models: any) {

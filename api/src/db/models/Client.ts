@@ -16,8 +16,7 @@ export class Client extends Model<ClientAttributes> implements ClientAttributes 
   public phone!: string | null;
   public created_at!: Date;
   public updated_at!: Date;
-
-  // Association methods will be added by Sequelize
+  
   public readonly meetings?: any[];
 
   static associate(models: any) {

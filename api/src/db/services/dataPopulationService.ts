@@ -21,12 +21,6 @@ export class DataPopulationService {
   constructor(queryInterface: QueryInterface) {
     this.queryInterface = queryInterface;
   }
-
-  /**
-   * Populate all tables from CSV data
-   * @param csvFilePath - Path to CSV file
-   * @returns Results summary
-   */
   async populateFromCSV(csvFilePath: string): Promise<PopulationSummary> {
     try {
       console.log('Starting data population from CSV...');
@@ -51,11 +45,6 @@ export class DataPopulationService {
     }
   }
 
-  /**
-   * Populate clients table
-   * @param csvData - Parsed CSV data
-   * @returns Population result
-   */
   private async populateClients(csvData: ClientCSVRow[]): Promise<PopulationResult> {
     console.log('Populating clients...');
     
@@ -86,7 +75,6 @@ export class DataPopulationService {
     if (clients.length > 0) {
       await this.queryInterface.bulkInsert('clients', clients);
       
-      // Build name-to-id mapping for meetings
       await this.buildClientNameToIdMap();
     }
     
@@ -94,23 +82,16 @@ export class DataPopulationService {
     return { inserted: clients.length, skipped: csvData.length - clients.length };
   }
 
-  /**
-   * Populate sellers table
-   * @param csvData - Parsed CSV data
-   * @returns Population result
-   */
   private async populateSellers(csvData: ClientCSVRow[]): Promise<PopulationResult> {
     console.log('Populating sellers...');
     
     const sellers = SellerMapper.extractSellersFromCSV(csvData);
     
-    // Validate all sellers
     sellers.forEach(seller => SellerMapper.validate(seller));
     
     if (sellers.length > 0) {
       await this.queryInterface.bulkInsert('sellers', sellers);
-      
-      // Build name-to-id mapping for meetings
+    
       await this.buildSellerNameToIdMap();
     }
     
@@ -118,11 +99,6 @@ export class DataPopulationService {
     return { inserted: sellers.length };
   }
 
-  /**
-   * Populate meetings table
-   * @param csvData - Parsed CSV data
-   * @returns Population result
-   */
   private async populateMeetings(csvData: ClientCSVRow[]): Promise<PopulationResult> {
     console.log('Populating meetings...');
     
@@ -180,9 +156,6 @@ export class DataPopulationService {
     });
   }
 
-  /**
-   * Build mapping from seller names to IDs
-   */
   private async buildSellerNameToIdMap(): Promise<void> {
     const sellers = await this.queryInterface.sequelize.query(
       'SELECT id, name FROM sellers ORDER BY id',

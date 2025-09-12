@@ -14,6 +14,6 @@ RUN npm ci --only=production
 COPY . .
 
 # Expose port
-EXPOSE 3000
+ENTRYPOINT [ "./start.sh" ]
 
-CMD ["sh", "-c", "npm run db:reset && npm run dev"]
+EXPOSE 3000
