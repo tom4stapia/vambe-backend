@@ -102,11 +102,11 @@ Respond with a JSON object containing the following structure:
     "vambe_product": "mercur",
     "use_case": "lead_scoring",
     "primary_pain_point": "lack_visibility",
-    "urgency": true,
+    "urgency": bool,
     "decision_maker_role": "ceo",
     "purchase_stage": "discovery",
     "language": "es",
-    "lost_client_bad_meeting": false,
+    "lost_client_bad_meeting": bool,
     "confidence_score": 0.85,
     "sentiment": "positive|neutral|negative",
     "key_topics": ["automatización de atención al cliente", "integración con WhatsApp", "personalización de respuestas"],
@@ -121,11 +121,10 @@ ENUM ANALYSIS GUIDELINES - SELECT ONE CATEGORY FROM EACH ENUM:
 - region: Select ONE from: latam_south, latam_north, north_america, europe, asia, africa, oceania. In case of doubt, select latam_south.
 - lead_source: Select ONE from: referral, seo, sem_ads, email, event, partner, outbound_call, cold_email, linkedin, instagram, facebook, webchat, pr, marketplace.
 - vambe_product: Select ONE (lowercase) from: mercur | iris | ads | axis.
-    mercur: Omnichannel conversational platform for WhatsApp/IG/Facebook/Webchat; assistants execute real business actions and structured sales/support flows. Use when chats, routing/SLAs, and human+AI handoff are primary.
-    iris: Quick-start automation for small teams; essential e-commerce/booking/support with minimal setup and low complexity. Use when they want something simple and fast.
-    ads: Marketing attribution & optimization across Meta/Google/LinkedIn; ties ad spend to revenue from chat conversions and reallocates budget intelligently. Use when the goal is growth efficiency.
-    axis: Low/no-code integrations & workflow orchestration (CRM/ERP/Payments/DW). Use when the core pain is connecting apps/data and automating cross-system flows, not managing chats.
-    Tie-breaker: chats+integrations: mercur; only integrations: axis; only marketing/attribution: ads; simple fast start: iris.
+    chats+integrations: mercur  
+    only integrations: axis  
+    only attribution/marketing: ads  
+    fast/simple: iris
 - use_case: Select ONE from: lead_scoring, customer_segmentation, churn_prediction, marketing_attribution, campaign_optimization, demand_forecasting, voice_analytics, operations_automation, real_time_reporting, dw_modernization, fraud_detection, conversational_support.
 - primary_pain_point: Select ONE from: lack_visibility, slow_reporting, low_conversion, high_churn, high_advertising_costs, difficult_integrations, regulatory_compliance, dispersed_data, saturated_support, scalability.
 - urgency: Select true if the client shows high urgency/immediate need, false if low urgency or no rush.
