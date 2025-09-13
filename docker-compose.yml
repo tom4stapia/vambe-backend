@@ -38,8 +38,8 @@ services:
       - db
       - redis
     volumes:
-      - ./api:/src/app
-      - /src/app/node_modules
+      - ./api:/app
+      - /app/node_modules
     networks:
       - vambe-network
 
