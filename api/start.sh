@@ -5,7 +5,7 @@ echo "🚀 Starting Vambe API..."
 
 run_command() {
     echo "📋 Running: $1"
-    if $1; then
+    if eval "$1"; then
         echo "✅ Success: $1"
     else
         echo "⚠️  Command failed but continuing: $1"
@@ -18,8 +18,7 @@ run_command "npm run db:create"
 echo "🔄 Running migrations..."
 run_command "npm run db:migrate"
 
-echo "🔄 Running seeders..."
-run_command "npm run db:seed"
-
-echo "🚀 Starting development server..."
-npm run dev
+# Start the application
+echo "🚀 Starting NestJS application..."
+# Use production start in Docker environment
+exec npm run start:prod
