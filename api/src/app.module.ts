@@ -7,6 +7,7 @@ import { MeetingsModule } from "./modules/meetings/meetings.module";
 import { WorkersModule } from "./modules/workers/workers.module";
 import { ClassificationsModule } from "./modules/classifications/classifications.module";
 import { SeedsModule } from "./modules/seeds/seeds.module";
+import { KpisModule } from "./modules/kpis/kpis.module";
 import { DatabaseModule } from "./database/database.module";
 import {
   appConfig,
@@ -31,6 +32,7 @@ import { RequestLoggerMiddleware } from "./common/middleware/request-logger.midd
     WorkersModule,
     ClassificationsModule,
     SeedsModule,
+    KpisModule,
   ],
   providers: [
     {
