@@ -1,0 +1,69 @@
+services:
+  db:
+    image: postgres:15-alpine
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    container_name: vambe-db
+    networks:
+      - vambe-network
+    restart: unless-stopped
+
+
+  redis:
+    image: redis:6-alpine
+    container_name: vambe-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - vambe-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: vambe-api
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./api:/app
+      - /app/node_modules
+    networks:
+      - vambe-network
+
+  workers:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+    container_name: vambe-workers
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./workers:/app
+    networks:
+      - vambe-network
+    restart: unless-stopped
+    command: python worker.py
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  vambe-network:
+    driver: bridge
