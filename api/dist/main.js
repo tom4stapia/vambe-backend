@@ -4755,7 +4755,7 @@ async function bootstrap() {
     const seedsService = app.get(seeds_service_1.SeedsService);
     await seedsService.populateClientsMeetings();
     const port = configService.get('app.port');
-    await app.listen(port);
+    await app.listen(port, '0.0.0.0');
     console.log(`🚀 Application is running on: http://localhost:${port}`);
     console.log(`📋 API prefix: ${apiPrefix}`);
     console.log(`🌍 Environment: ${configService.get('app.nodeEnv')}`);
