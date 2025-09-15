@@ -28,6 +28,10 @@ export class CreateSellerDto {
   @IsOptional()
   @IsBoolean()
   active?: boolean = true;
+
+  @IsOptional()
+  @IsString()
+  prompt?: string = '';
 }
 
 export class UpdateSellerDto {
@@ -52,4 +56,8 @@ export class UpdateSellerDto {
   @IsOptional()
   @IsBoolean()
   active?: boolean;
+
+  @IsOptional()
+  @IsString()
+  prompt?: string;
 }

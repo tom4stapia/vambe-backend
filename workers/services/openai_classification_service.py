@@ -49,10 +49,8 @@ class OpenAIClassificationService:
             
             response = self._call_openai_with_retry(prompt)
             
-            # Parse the response
             classification_data = self._parse_openai_response(response)
             
-            # Convert to ClassificationResult
             result = self._convert_to_classification_result(
                 classification_data, 
                 meeting_data, 
@@ -62,7 +60,6 @@ class OpenAIClassificationService:
             return result
             
         except Exception as e:
-            # Fallback to basic classification if OpenAI fails
             print(f"OpenAI classification failed: {e}")
             return self._create_fallback_result(meeting_data, start_time)
 
@@ -76,8 +73,7 @@ class OpenAIClassificationService:
         seller_name = meeting_data.seller_name or f"Seller {meeting_data.seller_id}"
         
         prompt = f"""
-You are an expert sales analyst specializing in meeting classification and analysis. 
-Analyze the following sales meeting transcript and provide comprehensive recommendations for each category.
+Analyze the following transcript and return the result strictly in **JSON** format.  
 
 MEETING DETAILS:
 - Date: {meeting_date}
@@ -88,65 +84,54 @@ MEETING DETAILS:
 TRANSCRIPT:
 {meeting_data.transcript or 'No transcript available'}
 
-For each enum below, select ONE specific category from the provided enum values based on the meeting content. You MUST select ONE specific category from the provided enum values - do NOT invent new categories. NEVER use null - always provide a selection for each enum. Avoid using "OTHER" as a response.
+INSTRUCTIONS:
+1. Respond **only** with a JSON object using the exact structure shown below.  
+2. For every field, select exactly **one option** from the allowed categories. Never invent new ones, never leave values empty, and never use "OTHER" or defaults.  
+3. Always extract real content from the transcript for: `key_topics`, `action_items`, `next_steps`, and `summary`. All these fields must be in **Spanish** and reflect what was actually discussed.  
+4. If the transcript is empty or very short, choose the most likely categories based on context and still provide a coherent Spanish summary and items.  
+5. `confidence_score` must always be between 0.1 and 0.95.  
+6. Be objective, consistent, and concise.  
+7. NEVER use generic placeholder text, use real content from the transcript
+8. Set `"urgency": true` **only if** the transcript includes phrases showing time pressure, specific deadlines, active problem statements, or the client asking for quick implementation or proposals. Otherwise, set it to false.  
+9. Set `"lost_client_bad_meeting": true` **only if** the transcript shows confusion, negative sentiment, client dissatisfaction, disagreement, lack of engagement, or a canceled follow-up. Otherwise, set it to false.
 
-IMPORTANT: For key_topics, action_items, next_steps, and summary, you MUST extract REAL content from the transcript. NEVER use generic placeholder text. All text content MUST be in Spanish and reflect what was ACTUALLY discussed in the meeting.
+ALLOWED CATEGORIES:
 
-Respond with a JSON object containing the following structure:
+- **business_sector:** retail, ecommerce, financial_services, insurance, healthcare, pharmaceuticals, energy, utilities, telecom, transportation_logistics, tourism_hospitality, education, government, agroindustry, manufacturing, construction, mining, media_entertainment, software_saas, real_estate, food_beverages, cpg, automotive, ngo, human_resources.
+- **company_size:** small, medium, large, enterprise.  
+- **region:** latam_south, latam_north, north_america, europe, asia, africa, oceania. (default if unsure: latam_south).  
+- **lead_source:** referral, seo, sem_ads, email, event, partner, outbound_call, cold_email, linkedin, instagram, facebook, webchat, pr, marketplace.  
+- **vambe_product:** mercur | iris | ads | axis. (chats+integrations: mercur; only integrations: axis; only attribution/marketing: ads; fast/simple: iris)
+- **use_case:** lead_scoring, customer_segmentation, churn_prediction, marketing_attribution, campaign_optimization, demand_forecasting, voice_analytics, operations_automation, real_time_reporting, dw_modernization, fraud_detection, conversational_support.  
+- **primary_pain_point:** lack_visibility, slow_reporting, low_conversion, high_churn, high_advertising_costs, difficult_integrations, regulatory_compliance, dispersed_data, saturated_support, scalability.  
+- **urgency:** true | false
+- **decision_maker_role:** ceo, coo, cto, cmo, cio, cfo, head_data, head_ops, head_sales, product_owner, it_manager, analyst, founder.  
+- **purchase_stage:** discovery, negotiation, closure.  
+- **language:** es | en (default if unsure: es).  
+- **lost_client_bad_meeting:** true | false
+
+Required JSON output structure:
 
 {{
-    "business_sector": "retail",
-    "company_size": "medium", 
-    "region": "latam_south",
-    "lead_source": "referral",
-    "vambe_product": "mercur",
-    "use_case": "lead_scoring",
-    "primary_pain_point": "lack_visibility",
-    "urgency": bool,
-    "decision_maker_role": "ceo",
-    "purchase_stage": "discovery",
-    "language": "es",
-    "lost_client_bad_meeting": bool,
-    "confidence_score": 0.85,
-    "sentiment": "positive|neutral|negative",
-    "key_topics": ["automatización de atención al cliente", "integración con WhatsApp", "personalización de respuestas"],
-    "action_items": ["enviar propuesta comercial", "programar demostración técnica", "definir casos de uso específicos"],
-    "next_steps": "El cliente solicita una propuesta comercial detallada y una demostración técnica para evaluar la implementación",
-    "summary": "Reunión con empresa de turismo interesada en automatizar la atención al cliente mediante WhatsApp, con enfoque en personalización y escalabilidad"
+    "business_sector": "<one category from business_sector>",
+    "company_size": "<one category from company_size>",
+    "region": "<one category from region>",
+    "lead_source": "<one category from lead_source>",
+    "vambe_product": "<one category from vambe_product>",
+    "use_case": "<one category from use_case>",
+    "primary_pain_point": "<one category from primary_pain_point>",
+    "urgency": boolean,
+    "decision_maker_role": "<one category from decision_maker_role>",
+    "purchase_stage": "<one category from purchase_stage>",
+    "language": "<one category from language>",
+    "lost_client_bad_meeting": boolean,
+    "confidence_score": <float between 0.1 and 0.95>,
+    "sentiment": "<one category from sentiment>",
+    "key_topics": ["<list of 2-5 specific topics in Spanish from the transcript>"],
+    "action_items": ["<list of 1-3 specific next actions in Spanish from the transcript>"],
+    "next_steps": "<concise Spanish description of the next agreed step>",
+    "summary": "<1-2 sentence Spanish summary of the meeting>"
 }}
-
-ENUM ANALYSIS GUIDELINES - SELECT ONE CATEGORY FROM EACH ENUM:
-- business_sector: Select ONE from: retail, ecommerce, financial_services, insurance, healthcare, pharmaceuticals, energy, utilities, telecom, transportation_logistics, tourism_hospitality, education, government, agroindustry, manufacturing, construction, mining, media_entertainment, software_saas, real_estate, food_beverages, cpg, automotive, ngo, human_resources.
-- company_size: Select ONE from: small, medium, large, enterprise.
-- region: Select ONE from: latam_south, latam_north, north_america, europe, asia, africa, oceania. In case of doubt, select latam_south.
-- lead_source: Select ONE from: referral, seo, sem_ads, email, event, partner, outbound_call, cold_email, linkedin, instagram, facebook, webchat, pr, marketplace.
-- vambe_product: Select ONE (lowercase) from: mercur | iris | ads | axis.
-    chats+integrations: mercur  
-    only integrations: axis  
-    only attribution/marketing: ads  
-    fast/simple: iris
-- use_case: Select ONE from: lead_scoring, customer_segmentation, churn_prediction, marketing_attribution, campaign_optimization, demand_forecasting, voice_analytics, operations_automation, real_time_reporting, dw_modernization, fraud_detection, conversational_support.
-- primary_pain_point: Select ONE from: lack_visibility, slow_reporting, low_conversion, high_churn, high_advertising_costs, difficult_integrations, regulatory_compliance, dispersed_data, saturated_support, scalability.
-- urgency: Select true if the client shows high urgency/immediate need, false if low urgency or no rush.
-- decision_maker_role: Select ONE from: ceo, coo, cto, cmo, cio, cfo, head_data, head_ops, head_sales, product_owner, it_manager, analyst, founder.
-- purchase_stage: Select ONE from: discovery, evaluation, pilot, negotiation, closure.
-- language: Select ONE from: es, en. In case of doubt, select es.
-- lost_client_bad_meeting: Select true if the meeting went poorly and the client is likely lost due to bad meeting experience, false otherwise.
-
-SELECTION GUIDELINES:
-1. Be objective and analytical in your assessment
-2. Focus on concrete evidence from the transcript
-3. For each enum, select EXACTLY ONE category from the provided list - do NOT invent new categories
-4. Provide a selection for EVERY enum - NEVER use null
-5. If an enum doesn't seem directly relevant, select the most appropriate category from the list or use "unknown" if truly unclear
-6. Use ONLY the exact enum values provided in the guidelines - no variations or custom categories
-7. Provide confidence scores between 0.1 and 0.95
-8. Extract 2-5 key topics that were ACTUALLY discussed in the meeting (be specific, not generic)
-9. Identify 1-3 actionable next steps that were MENTIONED or AGREED upon in the meeting
-10. Write a concise summary (1-2 sentences) of what was ACTUALLY discussed
-11. ALL text content (key_topics, action_items, next_steps, summary) MUST be in Spanish
-12. If transcript is empty or very short, select reasonable defaults from the provided categories
-13. NEVER use generic placeholder text like "tema específico" or "acción específica" - use real content from the transcript
 
 Respond ONLY with the JSON object, no additional text.
 """
@@ -162,7 +147,7 @@ Respond ONLY with the JSON object, no additional text.
                     messages=[
                         {
                             "role": "system", 
-                            "content": "You are a sales analyst expert. Always respond with valid JSON only."
+                            "content": "You are an expert sales analyst specializing in analyzing and classifying B2B/B2C sales meetings. Always respond with valid JSON only."
                         },
                         {"role": "user", "content": prompt}
                     ],

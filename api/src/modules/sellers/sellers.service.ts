@@ -61,6 +61,7 @@ export class SellersService {
         phone: createSellerDto.phone || null,
         active:
           createSellerDto.active !== undefined ? createSellerDto.active : true,
+        prompt: createSellerDto.prompt || '',
       });
 
       return seller.toJSON() as SellerModel;
@@ -92,6 +93,8 @@ export class SellersService {
         updateData.phone = updateSellerDto.phone;
       if (updateSellerDto.active !== undefined)
         updateData.active = updateSellerDto.active;
+      if (updateSellerDto.prompt !== undefined)
+        updateData.prompt = updateSellerDto.prompt;
 
       if (Object.keys(updateData).length === 0) {
         return seller.toJSON() as SellerModel;
@@ -148,6 +151,7 @@ export class SellersService {
       "email",
       "phone",
       "active",
+      "prompt",
       "created_at",
       "updated_at",
     ];

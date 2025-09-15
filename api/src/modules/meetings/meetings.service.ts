@@ -90,6 +90,8 @@ export class MeetingsService {
       throw new NotFoundException("Meeting not found");
     }
 
+    console.log(meeting.toJSON());
+
     return meeting.toJSON() as MeetingModel;
   }
 

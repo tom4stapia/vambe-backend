@@ -3,7 +3,7 @@ import {
   Get,
   Post,
   Body,
-  Patch,
+  Put,
   Param,
   Delete,
   Query,
@@ -65,7 +65,7 @@ export class SellersController {
     return response;
   }
 
-  @Patch(":id")
+  @Put(":id")
   async update(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateSellerDto: UpdateSellerDto,
