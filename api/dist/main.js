@@ -549,6 +549,14 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Seller.prototype, "active", void 0);
 __decorate([
+    (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.TEXT,
+        allowNull: true,
+        defaultValue: '',
+    }),
+    __metadata("design:type", String)
+], Seller.prototype, "prompt", void 0);
+__decorate([
     sequelize_typescript_1.CreatedAt,
     (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.DATE,
@@ -1185,6 +1193,7 @@ let SellersService = class SellersService {
                 email: createSellerDto.email,
                 phone: createSellerDto.phone || null,
                 active: createSellerDto.active !== undefined ? createSellerDto.active : true,
+                prompt: createSellerDto.prompt || '',
             });
             return seller.toJSON();
         }
@@ -1210,6 +1219,8 @@ let SellersService = class SellersService {
                 updateData.phone = updateSellerDto.phone;
             if (updateSellerDto.active !== undefined)
                 updateData.active = updateSellerDto.active;
+            if (updateSellerDto.prompt !== undefined)
+                updateData.prompt = updateSellerDto.prompt;
             if (Object.keys(updateData).length === 0) {
                 return seller.toJSON();
             }
@@ -1256,6 +1267,7 @@ let SellersService = class SellersService {
             "email",
             "phone",
             "active",
+            "prompt",
             "created_at",
             "updated_at",
         ];
@@ -1384,7 +1396,7 @@ __decorate([
     __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
 ], SellersController.prototype, "create", null);
 __decorate([
-    (0, common_1.Patch)(":id"),
+    (0, common_1.Put)(":id"),
     __param(0, (0, common_1.Param)("id", common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -1430,6 +1442,7 @@ const class_validator_1 = __webpack_require__(15);
 class CreateSellerDto {
     constructor() {
         this.active = true;
+        this.prompt = '';
     }
 }
 exports.CreateSellerDto = CreateSellerDto;
@@ -1456,6 +1469,11 @@ __decorate([
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], CreateSellerDto.prototype, "active", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSellerDto.prototype, "prompt", void 0);
 class UpdateSellerDto {
 }
 exports.UpdateSellerDto = UpdateSellerDto;
@@ -1484,6 +1502,11 @@ __decorate([
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], UpdateSellerDto.prototype, "active", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateSellerDto.prototype, "prompt", void 0);
 
 
 /***/ }),
@@ -3434,10 +3457,10 @@ const sequelize_1 = __webpack_require__(6);
 const kpis_controller_1 = __webpack_require__(48);
 const kpis_service_1 = __webpack_require__(49);
 const overview_kpis_service_1 = __webpack_require__(50);
-const sentiment_kpis_service_1 = __webpack_require__(51);
-const seller_performance_kpis_service_1 = __webpack_require__(52);
-const meeting_trends_kpis_service_1 = __webpack_require__(53);
-const client_engagement_kpis_service_1 = __webpack_require__(55);
+const seller_performance_kpis_service_1 = __webpack_require__(51);
+const meeting_trends_kpis_service_1 = __webpack_require__(52);
+const client_engagement_kpis_service_1 = __webpack_require__(54);
+const client_analysis_kpis_service_1 = __webpack_require__(55);
 const client_model_1 = __webpack_require__(8);
 const seller_model_1 = __webpack_require__(11);
 const meeting_model_1 = __webpack_require__(10);
@@ -3459,10 +3482,10 @@ exports.KpisModule = KpisModule = __decorate([
         providers: [
             kpis_service_1.KpisService,
             overview_kpis_service_1.OverviewKpisService,
-            sentiment_kpis_service_1.SentimentKpisService,
             seller_performance_kpis_service_1.SellerPerformanceKpisService,
             meeting_trends_kpis_service_1.MeetingTrendsKpisService,
             client_engagement_kpis_service_1.ClientEngagementKpisService,
+            client_analysis_kpis_service_1.ClientAnalysisKpisService,
         ],
         exports: [kpis_service_1.KpisService],
     })
@@ -3486,12 +3509,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.KpisController = void 0;
 const common_1 = __webpack_require__(2);
 const kpis_service_1 = __webpack_require__(49);
-const kpi_dto_1 = __webpack_require__(54);
+const kpi_dto_1 = __webpack_require__(53);
 let KpisController = class KpisController {
     constructor(kpisService) {
         this.kpisService = kpisService;
@@ -3502,9 +3525,6 @@ let KpisController = class KpisController {
     async getOverviewKpis(filters) {
         return this.kpisService.getOverviewKpis(filters);
     }
-    async getSentimentKpis(filters) {
-        return this.kpisService.getSentimentKpis(filters);
-    }
     async getSellerPerformanceKpis(filters) {
         return this.kpisService.getSellerPerformanceKpis(filters);
     }
@@ -3514,8 +3534,8 @@ let KpisController = class KpisController {
     async getClientEngagementKpis(filters) {
         return this.kpisService.getClientEngagementKpis(filters);
     }
-    async getDashboardKpis(filters) {
-        return this.kpisService.getDashboardKpis(filters);
+    async getClientAnalysisKpis(filters) {
+        return this.kpisService.getClientAnalysisKpis(filters);
     }
 };
 exports.KpisController = KpisController;
@@ -3536,45 +3556,37 @@ __decorate([
     __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
 ], KpisController.prototype, "getOverviewKpis", null);
 __decorate([
-    (0, common_1.Get)('sentiment'),
+    (0, common_1.Get)('sellers/performance'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [typeof (_f = typeof kpi_dto_1.KpiFiltersDto !== "undefined" && kpi_dto_1.KpiFiltersDto) === "function" ? _f : Object]),
     __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
-], KpisController.prototype, "getSentimentKpis", null);
-__decorate([
-    (0, common_1.Get)('sellers/performance'),
-    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    __param(0, (0, common_1.Query)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_h = typeof kpi_dto_1.KpiFiltersDto !== "undefined" && kpi_dto_1.KpiFiltersDto) === "function" ? _h : Object]),
-    __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
 ], KpisController.prototype, "getSellerPerformanceKpis", null);
 __decorate([
     (0, common_1.Get)('meetings/trends'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_k = typeof kpi_dto_1.KpiFiltersDto !== "undefined" && kpi_dto_1.KpiFiltersDto) === "function" ? _k : Object]),
-    __metadata("design:returntype", typeof (_l = typeof Promise !== "undefined" && Promise) === "function" ? _l : Object)
+    __metadata("design:paramtypes", [typeof (_h = typeof kpi_dto_1.KpiFiltersDto !== "undefined" && kpi_dto_1.KpiFiltersDto) === "function" ? _h : Object]),
+    __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
 ], KpisController.prototype, "getMeetingTrends", null);
 __decorate([
     (0, common_1.Get)('clients/engagement'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_m = typeof kpi_dto_1.KpiFiltersDto !== "undefined" && kpi_dto_1.KpiFiltersDto) === "function" ? _m : Object]),
-    __metadata("design:returntype", typeof (_o = typeof Promise !== "undefined" && Promise) === "function" ? _o : Object)
+    __metadata("design:paramtypes", [typeof (_k = typeof kpi_dto_1.KpiFiltersDto !== "undefined" && kpi_dto_1.KpiFiltersDto) === "function" ? _k : Object]),
+    __metadata("design:returntype", typeof (_l = typeof Promise !== "undefined" && Promise) === "function" ? _l : Object)
 ], KpisController.prototype, "getClientEngagementKpis", null);
 __decorate([
-    (0, common_1.Get)('dashboard'),
+    (0, common_1.Get)('clients/analysis'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_p = typeof kpi_dto_1.KpiFiltersDto !== "undefined" && kpi_dto_1.KpiFiltersDto) === "function" ? _p : Object]),
-    __metadata("design:returntype", Promise)
-], KpisController.prototype, "getDashboardKpis", null);
+    __metadata("design:paramtypes", [typeof (_m = typeof kpi_dto_1.KpiFiltersDto !== "undefined" && kpi_dto_1.KpiFiltersDto) === "function" ? _m : Object]),
+    __metadata("design:returntype", typeof (_o = typeof Promise !== "undefined" && Promise) === "function" ? _o : Object)
+], KpisController.prototype, "getClientAnalysisKpis", null);
 exports.KpisController = KpisController = __decorate([
     (0, common_1.Controller)('kpis'),
     __metadata("design:paramtypes", [typeof (_a = typeof kpis_service_1.KpisService !== "undefined" && kpis_service_1.KpisService) === "function" ? _a : Object])
@@ -3600,31 +3612,29 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.KpisService = void 0;
 const common_1 = __webpack_require__(2);
 const overview_kpis_service_1 = __webpack_require__(50);
-const sentiment_kpis_service_1 = __webpack_require__(51);
-const seller_performance_kpis_service_1 = __webpack_require__(52);
-const meeting_trends_kpis_service_1 = __webpack_require__(53);
-const client_engagement_kpis_service_1 = __webpack_require__(55);
-const kpi_dto_1 = __webpack_require__(54);
+const seller_performance_kpis_service_1 = __webpack_require__(51);
+const meeting_trends_kpis_service_1 = __webpack_require__(52);
+const client_engagement_kpis_service_1 = __webpack_require__(54);
+const client_analysis_kpis_service_1 = __webpack_require__(55);
+const kpi_dto_1 = __webpack_require__(53);
 let KpisService = class KpisService {
-    constructor(overviewKpisService, sentimentKpisService, sellerPerformanceKpisService, meetingTrendsKpisService, clientEngagementKpisService) {
+    constructor(overviewKpisService, sellerPerformanceKpisService, meetingTrendsKpisService, clientEngagementKpisService, clientAnalysisKpisService) {
         this.overviewKpisService = overviewKpisService;
-        this.sentimentKpisService = sentimentKpisService;
         this.sellerPerformanceKpisService = sellerPerformanceKpisService;
         this.meetingTrendsKpisService = meetingTrendsKpisService;
         this.clientEngagementKpisService = clientEngagementKpisService;
+        this.clientAnalysisKpisService = clientAnalysisKpisService;
     }
     async getAllKpis(filters) {
         const dateFilters = this.buildDateFilters(filters.startDate, filters.endDate);
-        const [overview, sentiment, sellerPerformance, meetingTrends, clientEngagement,] = await Promise.all([
+        const [overview, sellerPerformance, meetingTrends, clientEngagement,] = await Promise.all([
             this.overviewKpisService.getOverviewKpis(dateFilters),
-            this.sentimentKpisService.getSentimentKpis(dateFilters),
             this.sellerPerformanceKpisService.getSellerPerformanceKpis(dateFilters),
             this.meetingTrendsKpisService.getMeetingTrends(dateFilters, filters.period || kpi_dto_1.KpiPeriod.MONTHLY),
             this.clientEngagementKpisService.getClientEngagementKpis(dateFilters),
         ]);
         return {
             overview,
-            sentiment,
             sellerPerformance,
             meetingTrends,
             clientEngagement,
@@ -3634,10 +3644,6 @@ let KpisService = class KpisService {
     async getOverviewKpis(filters) {
         const dateFilters = this.buildDateFilters(filters.startDate, filters.endDate);
         return this.overviewKpisService.getOverviewKpis(dateFilters);
-    }
-    async getSentimentKpis(filters) {
-        const dateFilters = this.buildDateFilters(filters.startDate, filters.endDate);
-        return this.sentimentKpisService.getSentimentKpis(dateFilters);
     }
     async getSellerPerformanceKpis(filters) {
         const dateFilters = this.buildDateFilters(filters.startDate, filters.endDate);
@@ -3651,20 +3657,9 @@ let KpisService = class KpisService {
         const dateFilters = this.buildDateFilters(filters.startDate, filters.endDate);
         return this.clientEngagementKpisService.getClientEngagementKpis(dateFilters);
     }
-    async getDashboardKpis(filters) {
+    async getClientAnalysisKpis(filters) {
         const dateFilters = this.buildDateFilters(filters.startDate, filters.endDate);
-        const [overview, sentiment, allSellers] = await Promise.all([
-            this.overviewKpisService.getOverviewKpis(dateFilters),
-            this.sentimentKpisService.getSentimentKpis(dateFilters),
-            this.sellerPerformanceKpisService.getSellerPerformanceKpis(dateFilters),
-        ]);
-        const topSellers = allSellers.slice(0, 5);
-        return {
-            overview,
-            sentiment,
-            topSellers,
-            generatedAt: new Date(),
-        };
+        return this.clientAnalysisKpisService.getClientAnalysisKpis(dateFilters);
     }
     buildDateFilters(startDate, endDate) {
         const filters = {};
@@ -3683,7 +3678,7 @@ let KpisService = class KpisService {
 exports.KpisService = KpisService;
 exports.KpisService = KpisService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof overview_kpis_service_1.OverviewKpisService !== "undefined" && overview_kpis_service_1.OverviewKpisService) === "function" ? _a : Object, typeof (_b = typeof sentiment_kpis_service_1.SentimentKpisService !== "undefined" && sentiment_kpis_service_1.SentimentKpisService) === "function" ? _b : Object, typeof (_c = typeof seller_performance_kpis_service_1.SellerPerformanceKpisService !== "undefined" && seller_performance_kpis_service_1.SellerPerformanceKpisService) === "function" ? _c : Object, typeof (_d = typeof meeting_trends_kpis_service_1.MeetingTrendsKpisService !== "undefined" && meeting_trends_kpis_service_1.MeetingTrendsKpisService) === "function" ? _d : Object, typeof (_e = typeof client_engagement_kpis_service_1.ClientEngagementKpisService !== "undefined" && client_engagement_kpis_service_1.ClientEngagementKpisService) === "function" ? _e : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof overview_kpis_service_1.OverviewKpisService !== "undefined" && overview_kpis_service_1.OverviewKpisService) === "function" ? _a : Object, typeof (_b = typeof seller_performance_kpis_service_1.SellerPerformanceKpisService !== "undefined" && seller_performance_kpis_service_1.SellerPerformanceKpisService) === "function" ? _b : Object, typeof (_c = typeof meeting_trends_kpis_service_1.MeetingTrendsKpisService !== "undefined" && meeting_trends_kpis_service_1.MeetingTrendsKpisService) === "function" ? _c : Object, typeof (_d = typeof client_engagement_kpis_service_1.ClientEngagementKpisService !== "undefined" && client_engagement_kpis_service_1.ClientEngagementKpisService) === "function" ? _d : Object, typeof (_e = typeof client_analysis_kpis_service_1.ClientAnalysisKpisService !== "undefined" && client_analysis_kpis_service_1.ClientAnalysisKpisService) === "function" ? _e : Object])
 ], KpisService);
 
 
@@ -3827,121 +3822,6 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SentimentKpisService = void 0;
-const common_1 = __webpack_require__(2);
-const sequelize_1 = __webpack_require__(6);
-const sequelize_2 = __webpack_require__(34);
-const meeting_model_1 = __webpack_require__(10);
-const meeting_classification_model_1 = __webpack_require__(12);
-let SentimentKpisService = class SentimentKpisService {
-    constructor(meetingModel, meetingClassificationModel) {
-        this.meetingModel = meetingModel;
-        this.meetingClassificationModel = meetingClassificationModel;
-    }
-    async getSentimentKpis(dateFilters) {
-        const [sentimentCounts, averageConfidence] = await Promise.all([
-            this.getSentimentCounts(dateFilters),
-            this.getAverageConfidence(dateFilters),
-        ]);
-        const counts = this.processSentimentCounts(sentimentCounts);
-        const percentages = this.calculatePercentages(counts);
-        const sentimentTrend = this.determineSentimentTrend(percentages);
-        return {
-            positiveCount: counts.positive,
-            negativeCount: counts.negative,
-            neutralCount: counts.neutral,
-            positivePercentage: percentages.positive,
-            negativePercentage: percentages.negative,
-            neutralPercentage: percentages.neutral,
-            averageConfidence,
-            sentimentTrend,
-        };
-    }
-    async getSentimentCounts(dateFilters) {
-        return this.meetingClassificationModel.findAll({
-            attributes: [
-                'sentiment',
-                [sequelize_2.Sequelize.fn('COUNT', sequelize_2.Sequelize.col('MeetingClassification.id')), 'count'],
-            ],
-            include: [
-                {
-                    model: meeting_model_1.Meeting,
-                    where: dateFilters,
-                    required: true,
-                },
-            ],
-            group: ['MeetingClassification.sentiment'],
-            raw: true,
-        });
-    }
-    async getAverageConfidence(dateFilters) {
-        const avgConfidenceResult = await this.meetingClassificationModel.findOne({
-            attributes: [
-                [sequelize_2.Sequelize.fn('AVG', sequelize_2.Sequelize.col('MeetingClassification.confidence_score')), 'avgConfidence'],
-            ],
-            include: [
-                {
-                    model: meeting_model_1.Meeting,
-                    where: dateFilters,
-                    required: true,
-                },
-            ],
-            raw: true,
-        });
-        return avgConfidenceResult?.avgConfidence
-            ? Number(avgConfidenceResult.avgConfidence)
-            : 0;
-    }
-    processSentimentCounts(sentimentCounts) {
-        const counts = {
-            positive: 0,
-            negative: 0,
-            neutral: 0,
-        };
-        sentimentCounts.forEach((item) => {
-            counts[item.sentiment] = Number(item.count);
-        });
-        return counts;
-    }
-    calculatePercentages(counts) {
-        const total = counts.positive + counts.negative + counts.neutral;
-        return {
-            positive: total > 0 ? Math.round((counts.positive / total) * 10000) / 100 : 0,
-            negative: total > 0 ? Math.round((counts.negative / total) * 10000) / 100 : 0,
-            neutral: total > 0 ? Math.round((counts.neutral / total) * 10000) / 100 : 0,
-        };
-    }
-    determineSentimentTrend(percentages) {
-        return percentages.positive > percentages.negative ? 'positive' : 'negative';
-    }
-};
-exports.SentimentKpisService = SentimentKpisService;
-exports.SentimentKpisService = SentimentKpisService = __decorate([
-    (0, common_1.Injectable)(),
-    __param(0, (0, sequelize_1.InjectModel)(meeting_model_1.Meeting)),
-    __param(1, (0, sequelize_1.InjectModel)(meeting_classification_model_1.MeetingClassification)),
-    __metadata("design:paramtypes", [Object, Object])
-], SentimentKpisService);
-
-
-/***/ }),
-/* 52 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SellerPerformanceKpisService = void 0;
 const common_1 = __webpack_require__(2);
 const sequelize_1 = __webpack_require__(6);
@@ -4041,7 +3921,7 @@ exports.SellerPerformanceKpisService = SellerPerformanceKpisService = __decorate
 
 
 /***/ }),
-/* 53 */
+/* 52 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4063,7 +3943,7 @@ const common_1 = __webpack_require__(2);
 const sequelize_1 = __webpack_require__(6);
 const sequelize_2 = __webpack_require__(34);
 const meeting_model_1 = __webpack_require__(10);
-const kpi_dto_1 = __webpack_require__(54);
+const kpi_dto_1 = __webpack_require__(53);
 let MeetingTrendsKpisService = class MeetingTrendsKpisService {
     constructor(meetingModel) {
         this.meetingModel = meetingModel;
@@ -4130,7 +4010,7 @@ exports.MeetingTrendsKpisService = MeetingTrendsKpisService = __decorate([
 
 
 /***/ }),
-/* 54 */
+/* 53 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4144,7 +4024,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AllKpisResponseDto = exports.ClientEngagementKpisDto = exports.MeetingTrendsDto = exports.SellerPerformanceKpisDto = exports.SentimentKpisDto = exports.OverviewKpisDto = exports.KpiFiltersDto = exports.KpiType = exports.KpiPeriod = void 0;
+exports.AllKpisResponseDto = exports.ClientAnalysisKpisDto = exports.PrimaryPainPointAnalysisDto = exports.UseCaseAnalysisDto = exports.TechnologyAnalysisDto = exports.LeadSourceAnalysisDto = exports.SectorAnalysisDto = exports.ClientEngagementKpisDto = exports.MeetingTrendsDto = exports.SellerPerformanceKpisDto = exports.OverviewKpisDto = exports.KpiFiltersDto = exports.KpiType = exports.KpiPeriod = void 0;
 const class_validator_1 = __webpack_require__(15);
 var KpiPeriod;
 (function (KpiPeriod) {
@@ -4189,9 +4069,6 @@ __decorate([
 class OverviewKpisDto {
 }
 exports.OverviewKpisDto = OverviewKpisDto;
-class SentimentKpisDto {
-}
-exports.SentimentKpisDto = SentimentKpisDto;
 class SellerPerformanceKpisDto {
 }
 exports.SellerPerformanceKpisDto = SellerPerformanceKpisDto;
@@ -4201,13 +4078,31 @@ exports.MeetingTrendsDto = MeetingTrendsDto;
 class ClientEngagementKpisDto {
 }
 exports.ClientEngagementKpisDto = ClientEngagementKpisDto;
+class SectorAnalysisDto {
+}
+exports.SectorAnalysisDto = SectorAnalysisDto;
+class LeadSourceAnalysisDto {
+}
+exports.LeadSourceAnalysisDto = LeadSourceAnalysisDto;
+class TechnologyAnalysisDto {
+}
+exports.TechnologyAnalysisDto = TechnologyAnalysisDto;
+class UseCaseAnalysisDto {
+}
+exports.UseCaseAnalysisDto = UseCaseAnalysisDto;
+class PrimaryPainPointAnalysisDto {
+}
+exports.PrimaryPainPointAnalysisDto = PrimaryPainPointAnalysisDto;
+class ClientAnalysisKpisDto {
+}
+exports.ClientAnalysisKpisDto = ClientAnalysisKpisDto;
 class AllKpisResponseDto {
 }
 exports.AllKpisResponseDto = AllKpisResponseDto;
 
 
 /***/ }),
-/* 55 */
+/* 54 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4366,6 +4261,229 @@ exports.ClientEngagementKpisService = ClientEngagementKpisService = __decorate([
     __param(2, (0, sequelize_1.InjectModel)(meeting_classification_model_1.MeetingClassification)),
     __metadata("design:paramtypes", [Object, Object, Object])
 ], ClientEngagementKpisService);
+
+
+/***/ }),
+/* 55 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ClientAnalysisKpisService = void 0;
+const common_1 = __webpack_require__(2);
+const sequelize_1 = __webpack_require__(6);
+const sequelize_2 = __webpack_require__(34);
+const meeting_model_1 = __webpack_require__(10);
+const meeting_classification_model_1 = __webpack_require__(12);
+let ClientAnalysisKpisService = class ClientAnalysisKpisService {
+    constructor(meetingModel, meetingClassificationModel) {
+        this.meetingModel = meetingModel;
+        this.meetingClassificationModel = meetingClassificationModel;
+    }
+    async getClientAnalysisKpis(dateFilters) {
+        const [topSectors, topLeadSources, topTechnologies, topUseCases, topPrimaryPainPoints, totalAnalyzedMeetings,] = await Promise.all([
+            this.getTopSectors(dateFilters),
+            this.getTopLeadSources(dateFilters),
+            this.getTopVambeProducts(dateFilters),
+            this.getUseCases(dateFilters),
+            this.getPrimaryPainPoints(dateFilters),
+            this.getTotalAnalyzedMeetings(dateFilters),
+        ]);
+        return {
+            topSectors,
+            topLeadSources,
+            topTechnologies,
+            topUseCases,
+            topPrimaryPainPoints,
+            totalAnalyzedMeetings,
+        };
+    }
+    async getTopSectors(dateFilters) {
+        const classifications = await this.meetingClassificationModel.findAll({
+            attributes: ['business_sector'],
+            include: [
+                {
+                    model: meeting_model_1.Meeting,
+                    where: dateFilters,
+                    required: true,
+                },
+            ],
+            where: {
+                business_sector: {
+                    [sequelize_2.Op.ne]: null,
+                },
+            },
+        });
+        const sectorCounts = this.countOccurrences(classifications.map(c => c.business_sector).filter(Boolean));
+        const total = classifications.length;
+        return this.formatSectorAnalysisData(sectorCounts, total);
+    }
+    async getTopLeadSources(dateFilters) {
+        const classifications = await this.meetingClassificationModel.findAll({
+            attributes: ['lead_source'],
+            include: [
+                {
+                    model: meeting_model_1.Meeting,
+                    where: dateFilters,
+                    required: true,
+                },
+            ],
+            where: {
+                lead_source: {
+                    [sequelize_2.Op.ne]: null,
+                },
+            },
+        });
+        const sourceCounts = this.countOccurrences(classifications.map(c => c.lead_source).filter(Boolean));
+        const total = classifications.length;
+        return this.formatLeadSourceAnalysisData(sourceCounts, total);
+    }
+    async getTopVambeProducts(dateFilters) {
+        const classifications = await this.meetingClassificationModel.findAll({
+            attributes: ['vambe_product'],
+            include: [
+                {
+                    model: meeting_model_1.Meeting,
+                    where: dateFilters,
+                    required: true,
+                    attributes: [],
+                },
+            ],
+            where: {
+                vambe_product: {
+                    [sequelize_2.Op.ne]: null,
+                },
+            },
+        });
+        const vambeProductCounts = this.countOccurrences(classifications.map(c => c.vambe_product).filter(Boolean));
+        const total = classifications.length;
+        return this.formatTechnologyAnalysisData(vambeProductCounts, total);
+    }
+    async getUseCases(dateFilters) {
+        const classifications = await this.meetingClassificationModel.findAll({
+            attributes: ['use_case'],
+            include: [
+                {
+                    model: meeting_model_1.Meeting,
+                    where: dateFilters,
+                    required: true,
+                    attributes: [],
+                },
+            ],
+            where: {
+                use_case: {
+                    [sequelize_2.Op.ne]: null,
+                },
+            },
+        });
+        const useCaseCounts = this.countOccurrences(classifications.map(c => c.use_case).filter(Boolean));
+        const total = classifications.length;
+        return this.formatUseCaseAnalysisData(useCaseCounts, total);
+    }
+    async getPrimaryPainPoints(dateFilters) {
+        const classifications = await this.meetingClassificationModel.findAll({
+            attributes: ['primary_pain_point'],
+            include: [
+                {
+                    model: meeting_model_1.Meeting,
+                    where: dateFilters,
+                    required: true,
+                    attributes: [],
+                },
+            ],
+            where: {
+                primary_pain_point: {
+                    [sequelize_2.Op.ne]: null,
+                },
+            },
+        });
+        const painPointCounts = this.countOccurrences(classifications.map(c => c.primary_pain_point).filter(Boolean));
+        const total = classifications.length;
+        return this.formatPrimaryPainPointAnalysisData(painPointCounts, total);
+    }
+    async getTotalAnalyzedMeetings(dateFilters) {
+        return this.meetingClassificationModel.count({
+            include: [
+                {
+                    model: meeting_model_1.Meeting,
+                    where: dateFilters,
+                    required: true,
+                    attributes: [],
+                },
+            ],
+        });
+    }
+    countOccurrences(items) {
+        return items.reduce((acc, item) => {
+            acc[item] = (acc[item] || 0) + 1;
+            return acc;
+        }, {});
+    }
+    formatSectorAnalysisData(counts, total) {
+        const sorted = Object.entries(counts)
+            .sort(([, a], [, b]) => b - a);
+        return sorted.map(([key, count]) => ({
+            sector: key,
+            count,
+            percentage: total > 0 ? Number(((count / total) * 100).toFixed(2)) : 0,
+        }));
+    }
+    formatLeadSourceAnalysisData(counts, total) {
+        const sorted = Object.entries(counts)
+            .sort(([, a], [, b]) => b - a);
+        return sorted.map(([key, count]) => ({
+            source: key,
+            count,
+            percentage: total > 0 ? Number(((count / total) * 100).toFixed(2)) : 0,
+        }));
+    }
+    formatTechnologyAnalysisData(counts, total) {
+        const sorted = Object.entries(counts)
+            .sort(([, a], [, b]) => b - a);
+        return sorted.map(([key, count]) => ({
+            vambe_product: key,
+            count,
+            percentage: total > 0 ? Number(((count / total) * 100).toFixed(2)) : 0,
+        }));
+    }
+    formatUseCaseAnalysisData(counts, total) {
+        const sorted = Object.entries(counts)
+            .sort(([, a], [, b]) => b - a);
+        return sorted.map(([key, count]) => ({
+            use_case: key,
+            count,
+            percentage: total > 0 ? Number(((count / total) * 100).toFixed(2)) : 0,
+        }));
+    }
+    formatPrimaryPainPointAnalysisData(counts, total) {
+        const sorted = Object.entries(counts)
+            .sort(([, a], [, b]) => b - a);
+        return sorted.map(([key, count]) => ({
+            primary_pain_point: key,
+            count,
+            percentage: total > 0 ? Number(((count / total) * 100).toFixed(2)) : 0,
+        }));
+    }
+};
+exports.ClientAnalysisKpisService = ClientAnalysisKpisService;
+exports.ClientAnalysisKpisService = ClientAnalysisKpisService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, sequelize_1.InjectModel)(meeting_model_1.Meeting)),
+    __param(1, (0, sequelize_1.InjectModel)(meeting_classification_model_1.MeetingClassification)),
+    __metadata("design:paramtypes", [Object, Object])
+], ClientAnalysisKpisService);
 
 
 /***/ }),

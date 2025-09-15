@@ -12,6 +12,7 @@ import {
   SellerPerformanceKpisDto,
   MeetingTrendsDto,
   ClientEngagementKpisDto,
+  ClientAnalysisKpisDto,
   AllKpisResponseDto,
 } from './dto/kpi.dto';
 
@@ -48,6 +49,12 @@ export class KpisController {
   @HttpCode(HttpStatus.OK)
   async getClientEngagementKpis(@Query() filters: KpiFiltersDto): Promise<ClientEngagementKpisDto> {
     return this.kpisService.getClientEngagementKpis(filters);
+  }
+
+  @Get('clients/analysis')
+  @HttpCode(HttpStatus.OK)
+  async getClientAnalysisKpis(@Query() filters: KpiFiltersDto): Promise<ClientAnalysisKpisDto> {
+    return this.kpisService.getClientAnalysisKpis(filters);
   }
 
 }

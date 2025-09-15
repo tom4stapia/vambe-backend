@@ -3,12 +3,14 @@ import { OverviewKpisService } from './services/overview-kpis.service';
 import { SellerPerformanceKpisService } from './services/seller-performance-kpis.service';
 import { MeetingTrendsKpisService } from './services/meeting-trends-kpis.service';
 import { ClientEngagementKpisService } from './services/client-engagement-kpis.service';
+import { ClientAnalysisKpisService } from './services/client-analysis-kpis.service';
 import {
   AllKpisResponseDto,
   OverviewKpisDto,
   SellerPerformanceKpisDto,
   MeetingTrendsDto,
   ClientEngagementKpisDto,
+  ClientAnalysisKpisDto,
   KpiFiltersDto,
   KpiPeriod,
 } from './dto/kpi.dto';
@@ -20,6 +22,7 @@ export class KpisService {
     private readonly sellerPerformanceKpisService: SellerPerformanceKpisService,
     private readonly meetingTrendsKpisService: MeetingTrendsKpisService,
     private readonly clientEngagementKpisService: ClientEngagementKpisService,
+    private readonly clientAnalysisKpisService: ClientAnalysisKpisService,
   ) {}
 
   async getAllKpis(filters: KpiFiltersDto): Promise<AllKpisResponseDto> {
@@ -65,6 +68,11 @@ export class KpisService {
   async getClientEngagementKpis(filters: KpiFiltersDto): Promise<ClientEngagementKpisDto> {
     const dateFilters = this.buildDateFilters(filters.startDate, filters.endDate);
     return this.clientEngagementKpisService.getClientEngagementKpis(dateFilters);
+  }
+
+  async getClientAnalysisKpis(filters: KpiFiltersDto): Promise<ClientAnalysisKpisDto> {
+    const dateFilters = this.buildDateFilters(filters.startDate, filters.endDate);
+    return this.clientAnalysisKpisService.getClientAnalysisKpis(dateFilters);
   }
 
 

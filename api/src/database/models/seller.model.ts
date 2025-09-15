@@ -68,6 +68,13 @@ export class Seller extends Model<Seller> {
   })
   active: boolean;
 
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    defaultValue: '',
+  })
+  prompt: string;
+
   @CreatedAt
   @Column({
     type: DataType.DATE,
