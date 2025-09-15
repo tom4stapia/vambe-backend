@@ -73,7 +73,6 @@ class OpenAIClassificationService:
         seller_name = meeting_data.seller_name or f"Seller {meeting_data.seller_id}"
         
         prompt = f"""
-You are an expert sales analyst specializing in classifying and analyzing sales meetings.  
 Analyze the following transcript and return the result strictly in **JSON** format.  
 
 MEETING DETAILS:
@@ -93,6 +92,8 @@ INSTRUCTIONS:
 5. `confidence_score` must always be between 0.1 and 0.95.  
 6. Be objective, consistent, and concise.  
 7. NEVER use generic placeholder text, use real content from the transcript
+8. Set `"urgency": true` **only if** the transcript includes phrases showing time pressure, specific deadlines, active problem statements, or the client asking for quick implementation or proposals. Otherwise, set it to false.  
+9. Set `"lost_client_bad_meeting": true` **only if** the transcript shows confusion, negative sentiment, client dissatisfaction, disagreement, lack of engagement, or a canceled follow-up. Otherwise, set it to false.
 
 ALLOWED CATEGORIES:
 
@@ -103,11 +104,11 @@ ALLOWED CATEGORIES:
 - **vambe_product:** mercur | iris | ads | axis. (chats+integrations: mercur; only integrations: axis; only attribution/marketing: ads; fast/simple: iris)
 - **use_case:** lead_scoring, customer_segmentation, churn_prediction, marketing_attribution, campaign_optimization, demand_forecasting, voice_analytics, operations_automation, real_time_reporting, dw_modernization, fraud_detection, conversational_support.  
 - **primary_pain_point:** lack_visibility, slow_reporting, low_conversion, high_churn, high_advertising_costs, difficult_integrations, regulatory_compliance, dispersed_data, saturated_support, scalability.  
-- **urgency:** true | false (choose true if the client shows high urgency/immediate need, false if low urgency or no rush).  
+- **urgency:** true | false
 - **decision_maker_role:** ceo, coo, cto, cmo, cio, cfo, head_data, head_ops, head_sales, product_owner, it_manager, analyst, founder.  
 - **purchase_stage:** discovery, negotiation, closure.  
 - **language:** es | en (default if unsure: es).  
-- **lost_client_bad_meeting:** true | false (choose true if the meeting went poorly and the client is likely lost due to bad meeting experience, false otherwise).  
+- **lost_client_bad_meeting:** true | false
 
 Required JSON output structure:
 
@@ -146,7 +147,7 @@ Respond ONLY with the JSON object, no additional text.
                     messages=[
                         {
                             "role": "system", 
-                            "content": "You are a sales analyst expert. Always respond with valid JSON only."
+                            "content": "You are an expert sales analyst specializing in analyzing and classifying B2B/B2C sales meetings. Always respond with valid JSON only."
                         },
                         {"role": "user", "content": prompt}
                     ],

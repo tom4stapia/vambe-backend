@@ -7,10 +7,11 @@ export class CsvUtils {
     console.log(`📁 Reading CSV from: ${filePath}`);
     const csvContent = fs.readFileSync(filePath, 'utf-8');
     const lines = csvContent.split('\n').filter((line) => line.trim());
-    const headers = lines[0].split(',').map((h) => h.trim());
+    
+    const headers = this.parseCSVLine(lines[0]);
 
     const csvData = lines.slice(1).map((line) => {
-      const values = line.split(',').map((v) => v.trim());
+      const values = this.parseCSVLine(line);
       const row: any = {};
       headers.forEach((header, index) => {
         row[header] = values[index] || '';
@@ -20,6 +21,41 @@ export class CsvUtils {
 
     console.log(`📊 Found ${csvData.length} rows in CSV`);
     return csvData;
+  }
+
+  private static parseCSVLine(line: string): string[] {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    let i = 0;
+
+    while (i < line.length) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          // Escaped quote
+          current += '"';
+          i += 2;
+        } else {
+          // Toggle quote state
+          inQuotes = !inQuotes;
+          i++;
+        }
+      } else if (char === ',' && !inQuotes) {
+        // End of field
+        result.push(current.trim());
+        current = '';
+        i++;
+      } else {
+        current += char;
+        i++;
+      }
+    }
+
+    result.push(current.trim());
+    return result;
   }
 
   static getCsvFilePath(): string {
