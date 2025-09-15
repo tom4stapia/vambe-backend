@@ -32,7 +32,6 @@ async function bootstrap() {
   const port = configService.get<number>('app.port');
   await app.listen(port);
 
-  
   console.log(`🚀 Application is running on: http://localhost:${port}`);
   console.log(`📋 API prefix: ${apiPrefix}`);
   console.log(`🌍 Environment: ${configService.get<string>('app.nodeEnv')}`);
