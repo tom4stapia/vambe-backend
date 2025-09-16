@@ -5,17 +5,26 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  HttpStatus,
+  HttpCode,
+  UseGuards,
 } from "@nestjs/common";
 import { ClassificationsService } from "./classifications.service";
 import { ApiResponse } from "../../types/api.types";
+import { JwtAuthGuard, RolesGuard } from "../../common/guards";
+import { Roles, CurrentUser } from "../../common/decorators";
+import { User, UserRole } from "../../database/models/user.model";
 
 @Controller("classifications")
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
 export class ClassificationsController {
   constructor(
     private readonly classificationsService: ClassificationsService,
   ) {}
 
   @Get()
+  @HttpCode(HttpStatus.OK)
   async getAllClassifications(): Promise<ApiResponse> {
     const classifications =
       await this.classificationsService.getAllClassifications();
@@ -30,6 +39,7 @@ export class ClassificationsController {
   }
 
   @Get(":meetingId")
+  @HttpCode(HttpStatus.OK)
   async getClassification(
     @Param("meetingId", ParseIntPipe) meetingId: number,
   ): Promise<ApiResponse> {
@@ -54,6 +64,7 @@ export class ClassificationsController {
   }
 
   @Post("queue-unclassified")
+  @HttpCode(HttpStatus.ACCEPTED)
   async queueUnclassifiedMeetings(): Promise<ApiResponse> {
     const result =
       await this.classificationsService.queueUnclassifiedMeetings();

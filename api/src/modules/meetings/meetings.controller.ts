@@ -8,17 +8,26 @@ import {
   Delete,
   Query,
   ParseIntPipe,
+  HttpStatus,
+  HttpCode,
+  UseGuards,
 } from "@nestjs/common";
 import { MeetingsService } from "./meetings.service";
 import { CreateMeetingDto, UpdateMeetingDto } from "./dto/meeting.dto";
 import { PaginationDto } from "../../common/dto/pagination.dto";
 import { ApiResponse, PaginationMeta } from "../../types/api.types";
+import { JwtAuthGuard, RolesGuard } from "../../common/guards";
+import { Roles, CurrentUser } from "../../common/decorators";
+import { User, UserRole } from "../../database/models/user.model";
 
 @Controller("meetings")
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
 export class MeetingsController {
   constructor(private readonly meetingsService: MeetingsService) {}
 
   @Get()
+  @HttpCode(HttpStatus.OK)
   async findAll(
     @Query() paginationDto: PaginationDto,
     @Query("client_id") client_id?: string,
@@ -52,6 +61,7 @@ export class MeetingsController {
   }
 
   @Get(":id")
+  @HttpCode(HttpStatus.OK)
   async findOne(@Param("id", ParseIntPipe) id: number): Promise<ApiResponse> {
     const meeting = await this.meetingsService.findOne(id);
 
@@ -65,6 +75,7 @@ export class MeetingsController {
   }
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   async create(
     @Body() createMeetingDto: CreateMeetingDto,
   ): Promise<ApiResponse> {
@@ -80,6 +91,7 @@ export class MeetingsController {
   }
 
   @Patch(":id")
+  @HttpCode(HttpStatus.OK)
   async update(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateMeetingDto: UpdateMeetingDto,
@@ -96,6 +108,7 @@ export class MeetingsController {
   }
 
   @Delete(":id")
+  @HttpCode(HttpStatus.OK)
   async remove(@Param("id", ParseIntPipe) id: number): Promise<ApiResponse> {
     await this.meetingsService.remove(id);
 
@@ -108,6 +121,7 @@ export class MeetingsController {
   }
 
   @Patch(":id/close")
+  @HttpCode(HttpStatus.OK)
   async closeMeeting(
     @Param("id", ParseIntPipe) id: number,
   ): Promise<ApiResponse> {
