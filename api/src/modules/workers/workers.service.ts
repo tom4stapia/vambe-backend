@@ -62,11 +62,12 @@ export class WorkersService implements OnModuleDestroy {
     try {
       const force = !!options.force_reprocess;
       const callbackUrl = options.callback_url ?? null;
-
       const taskId = randomUUID();
 
-      this.classifyTask.applyAsync({
-        args: [meetingId, force, callbackUrl],
+      await this.redis.setex(`task_mapping:${taskId}`, 3600, meetingId.toString());
+
+      const task = this.classifyTask.applyAsync({
+        args: [meetingId, force, callbackUrl, taskId],
         kwargs: {},
       });
 
@@ -108,47 +109,56 @@ export class WorkersService implements OnModuleDestroy {
 
   async getTaskStatus(taskId: string): Promise<TaskStatus> {
     try {
-      const taskDataString = await this.redis.get(`celery-task-meta-${taskId}`);
-
-      if (!taskDataString) {
+      const meetingId = await this.redis.get(`task_mapping:${taskId}`);
+      console.log('Meeting ID:', meetingId);
+      
+      if (!meetingId) {
         return {
           task_id: taskId,
           status: "pending",
-          meta: { message: "Task not found or still queued" },
+          meta: { message: "Task not found or expired" },
         };
       }
 
-      const taskData = JSON.parse(taskDataString);
+      const taskStatusKey = `task_status:${taskId}`;
+      const taskStatus = await this.redis.get(taskStatusKey);
 
-      let result = null;
-      if (taskData.result && taskData.result !== "null") {
-        try {
-          result = JSON.parse(taskData.result);
-        } catch {
-          result = taskData.result as any;
+      if (taskStatus) {
+        const statusData = JSON.parse(taskStatus);
+        
+        if (statusData.status === "completed") {
+          const resultKey = `classification_result:${meetingId}`;
+          const classificationResult = await this.redis.get(resultKey);
+
+          if (classificationResult) {
+            const result = JSON.parse(classificationResult);
+            return {
+              task_id: taskId,
+              status: "completed",
+              result: {
+                success: true,
+                meeting_id: parseInt(meetingId),
+                classification_data: result
+              },
+              meta: null,
+              error: null,
+            };
+          }
         }
-      }
-
-      // Normalize Celery status to our interface
-      let normalizedStatus =
-        (taskData.status?.toLowerCase() as any) || "pending";
-      if (normalizedStatus === "success") {
-        normalizedStatus = "completed";
-      } else if (normalizedStatus === "failure") {
-        normalizedStatus = "failed";
-      } else if (
-        normalizedStatus === "started" ||
-        normalizedStatus === "progress"
-      ) {
-        normalizedStatus = "processing";
+        
+        return {
+          task_id: taskId,
+          status: statusData.status || "processing",
+          result: statusData.result || null,
+          meta: statusData.meta || null,
+          error: statusData.error || null,
+        };
       }
 
       return {
         task_id: taskId,
-        status: normalizedStatus,
-        result,
-        meta: taskData.meta ? JSON.parse(taskData.meta) : null,
-        error: taskData.traceback,
+        status: "processing",
+        meta: { message: "Task is being processed" },
       };
     } catch (error: any) {
       console.error("❌ Error getting task status:", error);

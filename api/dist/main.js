@@ -1955,7 +1955,6 @@ let MeetingsService = class MeetingsService {
         if (!meeting) {
             throw new common_1.NotFoundException("Meeting not found");
         }
-        console.log(meeting.toJSON());
         return meeting.toJSON();
     }
     async create(createMeetingDto) {
@@ -2378,8 +2377,9 @@ let WorkersService = class WorkersService {
             const force = !!options.force_reprocess;
             const callbackUrl = options.callback_url ?? null;
             const taskId = (0, crypto_1.randomUUID)();
-            this.classifyTask.applyAsync({
-                args: [meetingId, force, callbackUrl],
+            await this.redis.setex(`task_mapping:${taskId}`, 3600, meetingId.toString());
+            const task = this.classifyTask.applyAsync({
+                args: [meetingId, force, callbackUrl, taskId],
                 kwargs: {},
             });
             console.log(`Queued classification task for meeting ${meetingId} with task ID: ${taskId}`);
@@ -2410,41 +2410,50 @@ let WorkersService = class WorkersService {
     }
     async getTaskStatus(taskId) {
         try {
-            const taskDataString = await this.redis.get(`celery-task-meta-${taskId}`);
-            if (!taskDataString) {
+            const meetingId = await this.redis.get(`task_mapping:${taskId}`);
+            console.log('Meeting ID:', meetingId);
+            if (!meetingId) {
                 return {
                     task_id: taskId,
                     status: "pending",
-                    meta: { message: "Task not found or still queued" },
+                    meta: { message: "Task not found or expired" },
                 };
             }
-            const taskData = JSON.parse(taskDataString);
-            let result = null;
-            if (taskData.result && taskData.result !== "null") {
-                try {
-                    result = JSON.parse(taskData.result);
+            const taskStatusKey = `task_status:${taskId}`;
+            const taskStatus = await this.redis.get(taskStatusKey);
+            console.log('Task status:', taskStatus);
+            if (taskStatus) {
+                const statusData = JSON.parse(taskStatus);
+                if (statusData.status === "completed") {
+                    const resultKey = `classification_result:${meetingId}`;
+                    const classificationResult = await this.redis.get(resultKey);
+                    if (classificationResult) {
+                        const result = JSON.parse(classificationResult);
+                        return {
+                            task_id: taskId,
+                            status: "completed",
+                            result: {
+                                success: true,
+                                meeting_id: parseInt(meetingId),
+                                classification_data: result
+                            },
+                            meta: null,
+                            error: null,
+                        };
+                    }
                 }
-                catch {
-                    result = taskData.result;
-                }
-            }
-            let normalizedStatus = taskData.status?.toLowerCase() || "pending";
-            if (normalizedStatus === "success") {
-                normalizedStatus = "completed";
-            }
-            else if (normalizedStatus === "failure") {
-                normalizedStatus = "failed";
-            }
-            else if (normalizedStatus === "started" ||
-                normalizedStatus === "progress") {
-                normalizedStatus = "processing";
+                return {
+                    task_id: taskId,
+                    status: statusData.status || "processing",
+                    result: statusData.result || null,
+                    meta: statusData.meta || null,
+                    error: statusData.error || null,
+                };
             }
             return {
                 task_id: taskId,
-                status: normalizedStatus,
-                result,
-                meta: taskData.meta ? JSON.parse(taskData.meta) : null,
-                error: taskData.traceback,
+                status: "processing",
+                meta: { message: "Task is being processed" },
             };
         }
         catch (error) {
@@ -5774,7 +5783,7 @@ async function bootstrap() {
     const seedsService = app.get(seeds_service_1.SeedsService);
     await seedsService.populateClientsMeetings();
     const port = configService.get('app.port');
-    await app.listen(port, '0.0.0.0');
+    await app.listen(port);
     console.log(`🚀 Application is running on: http://localhost:${port}`);
     console.log(`📋 API prefix: ${apiPrefix}`);
     console.log(`🌍 Environment: ${configService.get('app.nodeEnv')}`);

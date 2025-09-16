@@ -23,8 +23,10 @@ def classify_meeting_task(
     meeting_id: int,
     force_reprocess: bool = False,
     callback_url: Optional[str] = None,
+    api_task_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     task_id = self.request.id
+    api_task_id = api_task_id or task_id 
 
     try:
         self.update_state(
@@ -34,6 +36,14 @@ def classify_meeting_task(
                 "meeting_id": meeting_id,
             },
         )
+        
+        task_status = {
+            "status": "processing",
+            "meeting_id": meeting_id,
+            "message": "Processing meeting classification...",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        redis_client.store_task_status(api_task_id, task_status)
 
         meeting_data_dict = db_client.get_meeting(meeting_id)
 
@@ -75,6 +85,14 @@ def classify_meeting_task(
         }
 
         self.update_state(state="SUCCESS", meta=result)
+        
+        final_task_status = {
+            "status": "completed",
+            "meeting_id": meeting_id,
+            "result": result,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        redis_client.store_task_status(api_task_id, final_task_status)
 
         return result
 
@@ -84,6 +102,14 @@ def classify_meeting_task(
         self.update_state(
             state="FAILURE", meta={"error": str(e), "meeting_id": meeting_id}
         )
+        
+        error_task_status = {
+            "status": "failed",
+            "meeting_id": meeting_id,
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        redis_client.store_task_status(api_task_id, error_task_status)
 
         print(f"💥 {error_msg}")
 

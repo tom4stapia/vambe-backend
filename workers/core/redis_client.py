@@ -24,7 +24,6 @@ class RedisQueueClient:
             self.connect()
 
         try:
-            # Wait for task from Redis queue with 1 second timeout
             task_data_raw = self.redis_client.brpop("celery", 1)
 
             if task_data_raw:
@@ -70,6 +69,19 @@ class RedisQueueClient:
             print(f"Error storing result in Redis: {str(e)}")
             return False
 
+    def store_task_status(self, task_id: str, status_data: Dict[str, Any]) -> bool:
+        if not self.redis_client:
+            self.connect()
+
+        try:
+            task_status_key = f"task_status:{task_id}"
+            self.redis_client.setex(task_status_key, 3600, json.dumps(status_data))
+            print(f"Task status stored in Redis for task {task_id}")
+            return True
+        except Exception as e:
+            print(f"Error storing task status in Redis: {str(e)}")
+            return False
+
     def update_task_status(
         self, task_id: str, status: str, result: Optional[Dict[str, Any]] = None
     ) -> bool:
@@ -77,7 +89,6 @@ class RedisQueueClient:
             self.connect()
 
         try:
-            # Update status
             self.redis_client.hset(f"celery-task-meta-{task_id}", "status", status)
 
             if status == "PROGRESS":
