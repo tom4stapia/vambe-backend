@@ -36,11 +36,6 @@ export class SuperAdminPopulationService {
         active: true,
       });
 
-      console.log(`✅ Super admin created successfully with ID: ${superAdmin.id}`);
-      console.log(`📧 Email: ${superAdminEmail}`);
-      console.log(`🔑 Password: ${superAdminPassword}`);
-      console.log('⚠️  Please change the password after first login!');
-
     } catch (error) {
       console.error('❌ Error creating super admin:', error);
       throw error;
