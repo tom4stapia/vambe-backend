@@ -10,7 +10,6 @@ export class RequestLoggerMiddleware implements NestMiddleware {
     const userAgent = headers["user-agent"] || "";
     const startTime = Date.now();
 
-    // Log incoming request
     this.logger.log(`📥 ${method} ${originalUrl} - ${ip} - ${userAgent}`);
 
     const originalEnd = res.end.bind(res);

@@ -5,6 +5,7 @@ import { Client } from "./models/client.model";
 import { Seller } from "./models/seller.model";
 import { Meeting } from "./models/meeting.model";
 import { MeetingClassification } from "./models/meeting-classification.model";
+import { User } from "./models/user.model";
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { MeetingClassification } from "./models/meeting-classification.model";
           username: dbConfig.username,
           password: dbConfig.password,
           database: dbConfig.database,
-          models: [Client, Seller, Meeting, MeetingClassification],
+          models: [Client, Seller, Meeting, MeetingClassification, User],
           autoLoadModels: true,
           synchronize: false,
           logging: dbConfig.logging,

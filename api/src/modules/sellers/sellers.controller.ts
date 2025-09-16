@@ -8,17 +8,26 @@ import {
   Delete,
   Query,
   ParseIntPipe,
+  HttpStatus,
+  HttpCode,
+  UseGuards,
 } from "@nestjs/common";
 import { SellersService } from "./sellers.service";
 import { CreateSellerDto, UpdateSellerDto } from "./dto/seller.dto";
 import { PaginationDto } from "../../common/dto/pagination.dto";
 import { ApiResponse, PaginationMeta } from "../../types/api.types";
+import { JwtAuthGuard, RolesGuard } from "../../common/guards";
+import { Roles, CurrentUser } from "../../common/decorators";
+import { User, UserRole } from "../../database/models/user.model";
 
 @Controller("sellers")
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
 export class SellersController {
   constructor(private readonly sellersService: SellersService) {}
 
   @Get()
+  @HttpCode(HttpStatus.OK)
   async findAll(@Query() paginationDto: PaginationDto): Promise<ApiResponse> {
     const result = await this.sellersService.findAll(paginationDto);
 
@@ -40,6 +49,7 @@ export class SellersController {
   }
 
   @Get(":id")
+  @HttpCode(HttpStatus.OK)
   async findOne(@Param("id", ParseIntPipe) id: number): Promise<ApiResponse> {
     const seller = await this.sellersService.findOne(id);
 
@@ -53,6 +63,7 @@ export class SellersController {
   }
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   async create(@Body() createSellerDto: CreateSellerDto): Promise<ApiResponse> {
     const seller = await this.sellersService.create(createSellerDto);
 
@@ -66,6 +77,7 @@ export class SellersController {
   }
 
   @Put(":id")
+  @HttpCode(HttpStatus.OK)
   async update(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateSellerDto: UpdateSellerDto,
@@ -82,6 +94,7 @@ export class SellersController {
   }
 
   @Delete(":id")
+  @HttpCode(HttpStatus.OK)
   async remove(@Param("id", ParseIntPipe) id: number): Promise<ApiResponse> {
     await this.sellersService.remove(id);
 
@@ -94,6 +107,7 @@ export class SellersController {
   }
 
   @Get("active")
+  @HttpCode(HttpStatus.OK)
   async getActiveSellers(): Promise<ApiResponse> {
     const sellers = await this.sellersService.getActiveSellers();
 
