@@ -493,7 +493,7 @@ curl https://eaznxkzdji.execute-api.us-east-2.amazonaws.com/health
 
 - **Repositorio GitHub**: [https://github.com/tom4stapia/vambe-ai-backend](https://github.com/tu-usuario/vambe-ai-backend)
 - **API en Producción**: [https://eaznxkzdji.execute-api.us-east-2.amazonaws.com](https://eaznxkzdji.execute-api.us-east-2.amazonaws.com)
-- **Health Check**: [https://eaznxkzdji.execute-api.us-east-2.amazonaws.com/health](https://eaznxkzdji.execute-api.us-east-2.amazonaws.com/health)
+- **Health Check**: [https://eaznxkzdji.execute-api.us-east-2.amazonaws.com/api/v1/health](https://eaznxkzdji.execute-api.us-east-2.amazonaws.com/api/v1/health)
 
 ---
 
