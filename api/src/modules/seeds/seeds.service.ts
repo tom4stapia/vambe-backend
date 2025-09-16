@@ -3,6 +3,7 @@ import { ClientPopulationService } from "./services/client-population.service";
 import { SellerPopulationService } from "./services/seller-population.service";
 import { MeetingPopulationService } from "./services/meeting-population.service";
 import { ClassificationQueueService } from "./services/classification-queue.service";
+import { SuperAdminPopulationService } from "./services/super-admin-population.service";
 import { CsvUtils } from "./utils/csv.utils";
 
 @Injectable()
@@ -12,12 +13,14 @@ export class SeedsService {
     private sellerPopulationService: SellerPopulationService,
     private meetingPopulationService: MeetingPopulationService,
     private classificationQueueService: ClassificationQueueService,
+    private superAdminPopulationService: SuperAdminPopulationService,
   ) {}
 
   async populateClientsMeetings(): Promise<void> {
     console.log("🌱 Starting seed: clients-meetings data population");
 
     try {
+      await this.superAdminPopulationService.populateSuperAdmin();
       const csvFilePath = CsvUtils.getCsvFilePath();
       const csvData = CsvUtils.parseCSV(csvFilePath);
     

@@ -6,15 +6,24 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  HttpStatus,
+  HttpCode,
+  UseGuards,
 } from "@nestjs/common";
 import { WorkersService } from "./workers.service";
 import { ApiResponse } from "../../types/api.types";
+import { JwtAuthGuard, RolesGuard } from "../../common/guards";
+import { Roles, CurrentUser } from "../../common/decorators";
+import { User, UserRole } from "../../database/models/user.model";
 
 @Controller("workers")
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
 export class WorkersController {
   constructor(private readonly workersService: WorkersService) {}
 
   @Post("classify/:meetingId")
+  @HttpCode(HttpStatus.ACCEPTED)
   async classifyMeeting(
     @Param("meetingId", ParseIntPipe) meetingId: number,
     @Body() body: { force_reprocess?: boolean; callback_url?: string },
@@ -35,6 +44,7 @@ export class WorkersController {
   }
 
   @Post("classify/batch")
+  @HttpCode(HttpStatus.ACCEPTED)
   async classifyMeetingsBatch(
     @Body() body: { meeting_ids: number[]; force_reprocess?: boolean },
   ): Promise<ApiResponse> {
@@ -77,6 +87,7 @@ export class WorkersController {
   }
 
   @Get("task/:taskId")
+  @HttpCode(HttpStatus.OK)
   async getTaskStatus(@Param("taskId") taskId: string): Promise<ApiResponse> {
     const status = await this.workersService.getTaskStatus(taskId);
 
@@ -90,6 +101,7 @@ export class WorkersController {
   }
 
   @Get("stats")
+  @HttpCode(HttpStatus.OK)
   async getWorkerStats(): Promise<ApiResponse> {
     const stats = await this.workersService.getWorkerStats();
 
@@ -103,6 +115,7 @@ export class WorkersController {
   }
 
   @Get("health")
+  @HttpCode(HttpStatus.OK)
   async workerHealthCheck(): Promise<ApiResponse> {
     const health = await this.workersService.healthCheck();
 
@@ -120,6 +133,7 @@ export class WorkersController {
   }
 
   @Get("classification/:meetingId")
+  @HttpCode(HttpStatus.OK)
   async getClassificationResult(
     @Param("meetingId", ParseIntPipe) meetingId: number,
   ): Promise<ApiResponse> {
@@ -146,6 +160,7 @@ export class WorkersController {
   }
 
   @Get("classifications")
+  @HttpCode(HttpStatus.OK)
   async getAllClassificationResults(): Promise<ApiResponse> {
     const results = await this.workersService.getAllClassificationResults();
 
@@ -162,6 +177,7 @@ export class WorkersController {
   }
 
   @Delete("classification/:meetingId")
+  @HttpCode(HttpStatus.OK)
   async deleteClassificationResult(
     @Param("meetingId", ParseIntPipe) meetingId: number,
   ): Promise<ApiResponse> {

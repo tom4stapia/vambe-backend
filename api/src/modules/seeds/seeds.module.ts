@@ -9,10 +9,12 @@ import { ClientPopulationService } from "./services/client-population.service";
 import { SellerPopulationService } from "./services/seller-population.service";
 import { MeetingPopulationService } from "./services/meeting-population.service";
 import { ClassificationQueueService } from "./services/classification-queue.service";
+import { SuperAdminPopulationService } from "./services/super-admin-population.service";
 import { Meeting } from "../../database/models/meeting.model";
 import { Client } from "../../database/models/client.model";
 import { Seller } from "../../database/models/seller.model";
 import { MeetingClassification } from "../../database/models/meeting-classification.model";
+import { User } from "../../database/models/user.model";
 
 @Module({
   imports: [
@@ -27,6 +29,7 @@ import { MeetingClassification } from "../../database/models/meeting-classificat
       Client,
       Seller,
       MeetingClassification,
+      User,
     ]),
   ],
   controllers: [SeedsController],
@@ -36,6 +39,7 @@ import { MeetingClassification } from "../../database/models/meeting-classificat
     SellerPopulationService,
     MeetingPopulationService,
     ClassificationQueueService,
+    SuperAdminPopulationService,
   ],
   exports: [SeedsService],
 })

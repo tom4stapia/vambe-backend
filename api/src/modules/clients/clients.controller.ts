@@ -9,17 +9,25 @@ import {
   Query,
   ParseIntPipe,
   HttpStatus,
+  HttpCode,
+  UseGuards,
 } from "@nestjs/common";
 import { ClientsService } from "./clients.service";
 import { CreateClientDto, UpdateClientDto } from "./dto/client.dto";
 import { PaginationDto } from "../../common/dto/pagination.dto";
 import { ApiResponse, PaginationMeta } from "../../types/api.types";
+import { JwtAuthGuard, RolesGuard } from "../../common/guards";
+import { Roles, CurrentUser } from "../../common/decorators";
+import { User, UserRole } from "../../database/models/user.model";
 
 @Controller("clients")
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
 export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
 
   @Get()
+  @HttpCode(HttpStatus.OK)
   async findAll(@Query() paginationDto: PaginationDto): Promise<ApiResponse> {
     const result = await this.clientsService.findAll(paginationDto);
 
@@ -41,6 +49,7 @@ export class ClientsController {
   }
 
   @Get(":id")
+  @HttpCode(HttpStatus.OK)
   async findOne(@Param("id", ParseIntPipe) id: number): Promise<ApiResponse> {
     const client = await this.clientsService.findOne(id);
 
@@ -54,6 +63,7 @@ export class ClientsController {
   }
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   async create(@Body() createClientDto: CreateClientDto): Promise<ApiResponse> {
     const client = await this.clientsService.create(createClientDto);
 
@@ -67,6 +77,7 @@ export class ClientsController {
   }
 
   @Patch(":id")
+  @HttpCode(HttpStatus.OK)
   async update(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateClientDto: UpdateClientDto,
@@ -83,6 +94,7 @@ export class ClientsController {
   }
 
   @Delete(":id")
+  @HttpCode(HttpStatus.OK)
   async remove(@Param("id", ParseIntPipe) id: number): Promise<ApiResponse> {
     await this.clientsService.remove(id);
 
